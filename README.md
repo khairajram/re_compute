@@ -1,159 +1,221 @@
-# Turborepo starter
+# 🚀 Re-Compute
 
-This Turborepo starter is maintained by the Turborepo core team.
+A distributed compute platform that allows users to rent remote machines (laptops/PCs) and run workloads securely via a web interface.
 
-## Using this example
+> 💡 Think of it as a lightweight version of cloud computing — powered by real user machines.
 
-Run the following command:
+---
 
-```sh
-npx create-turbo@latest
+## 🧠 Overview
+
+Re-Compute enables:
+
+- 🖥️ **Hosts** to share their machine resources (CPU, RAM, storage)
+- 👨‍💻 **Users** to rent and execute code remotely
+- 🔌 **Real-time communication** via WebSockets
+- ⚙️ **Containerized execution** using Docker
+
+---
+
+## 🏗️ Monorepo Structure
+
+```
+Re_compute/
+│
+├── apps/
+│   ├── app_frontend/     # Next.js frontend
+│   ├── backend/          # REST API (Express)
+│   └── websocket/        # WebSocket server
+│
+├── packages/
+│   ├── db/               # Prisma DB client (shared)
+│   ├── ui/               # Shared UI components
+│   ├── typescript-config/# Shared TS config
+│   └── eslint-config/    # Shared lint rules
+│
+├── turbo.json
+├── pnpm-workspace.yaml
+└── package.json
 ```
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+## ⚙️ Tech Stack
 
-### Apps and Packages
+### 🧩 Core
+- Node.js
+- TypeScript
+- pnpm (workspace)
+- Turborepo
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+### 🌐 Frontend
+- Next.js
+- React
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+### 🔧 Backend
+- Express.js
+- WebSocket (`ws` / `socket.io`)
 
-### Utilities
+### 🗄️ Database
+- PostgreSQL
+- Prisma ORM
 
-This Turborepo has some additional tools already setup for you:
+### 🐳 Infrastructure
+- Docker (for isolated compute environments)
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+---
 
-### Build
+## 🚀 Getting Started
 
-To build all apps and packages, run the following command:
+### 1️⃣ Clone the repo
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```bash
+git clone https://github.com/your-username/re-compute.git
+cd re-compute
 ```
 
-Without global `turbo`, use your package manager:
+### 2️⃣ Install dependencies
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm dlx turbo build
-pnpm exec turbo build
+```bash
+pnpm install
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+### 3️⃣ Setup environment variables
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+Create `.env` inside `packages/db`:
 
-```sh
-turbo build --filter=docs
+```env
+DATABASE_URL=your_database_url
 ```
 
-Without global `turbo`:
+### 4️⃣ Setup database
 
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+```bash
+pnpm --filter @repo/db db:generate
+pnpm --filter @repo/db db:migrate
 ```
 
-### Develop
+### 5️⃣ Run the project
 
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
+```bash
+pnpm dev
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
+## 🔁 What `pnpm dev` Does
+
+Runs all services using Turborepo:
+
+- 🧠 DB watcher (`tsc --watch`)
+- 🌐 Frontend (`next dev`)
+- 🔧 Backend (Node/tsx)
+- ⚡ WebSocket server
+
+---
+
+## 🧩 Core Architecture
+
+```
+Frontend → Backend API → Database
+        ↘
+         → WebSocket Server → Host Machines
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+---
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+## 🔌 System Flow
 
-```sh
-turbo dev --filter=web
+1. User logs in
+2. Selects a host machine
+3. Starts a compute session
+4. Commands sent via WebSocket
+5. Host executes inside Docker container
+6. Output streamed back in real-time
+
+---
+
+## 📦 Shared DB Package
+
+Located at:
+
+```
+packages/db
 ```
 
-Without global `turbo`:
+Usage:
 
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+```ts
+import { prisma } from "@repo/db";
 ```
 
-### Remote Caching
+---
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+## 🔐 Prisma Setup
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+Uses a singleton pattern to prevent multiple DB connections:
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
+```ts
+export const prisma = globalThis.prisma ?? new PrismaClient();
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
+## 📌 Scripts
+
+### Root
+
+```bash
+pnpm dev        # Run all services
+pnpm build      # Build all packages
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+### DB Package
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
+```bash
+pnpm db:generate
+pnpm db:migrate
+pnpm db:push
+pnpm db:studio
 ```
 
-Without global `turbo`:
+---
 
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
+## ⚠️ Important Notes
+
+- Use **Node.js 20** (LTS)
+- Avoid spaces in project folder path
+- Always import DB from `@repo/db`
+- Do **NOT** create multiple Prisma instances
+
+---
+
+## 🚀 Future Improvements
+
+- 💳 Payment integration
+- 📊 Resource monitoring dashboard
+- 🔒 Secure sandbox execution
+- 📡 Job scheduling system
+- 🌍 Multi-region support
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome!
+
+```
+fork → clone → branch → PR 🚀
 ```
 
-## Useful Links
+---
 
-Learn more about the power of Turborepo:
+## 📄 License
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+MIT License
+
+---
+
+## 👨‍💻 Author
+
+Built with ❤️ by Bharat

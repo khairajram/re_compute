@@ -70,8 +70,8 @@ Re_compute/
 ### 1️⃣ Clone the repo
 
 ```bash
-git clone https://github.com/your-username/re-compute.git
-cd re-compute
+git clone https://github.com/khairajram/re_compute
+cd re_compute
 ```
 
 ### 2️⃣ Install dependencies
@@ -218,4 +218,4 @@ MIT License
 
 ## 👨‍💻 Author
 
-Built with ❤️ by Bharat
+Built with ❤️ by Khairaj

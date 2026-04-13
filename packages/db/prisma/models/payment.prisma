@@ -1,0 +1,23 @@
+model Payment {
+  id        Int      @id @default(autoincrement())
+
+  session   Session  @relation(fields: [sessionId], references: [id])
+  sessionId Int      @unique
+
+  amount    Float
+  status    Status
+  method    Method
+
+  createdAt DateTime @default(now())
+}
+
+enum Status {
+    PENDING
+    SUCCESS
+    FAILED
+}
+
+enum Method {
+    RAZORPAY
+    CRYPTO
+}

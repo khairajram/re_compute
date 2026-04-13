@@ -1,0 +1,13 @@
+model ResourceUsage {
+  id        Int      @id @default(autoincrement())
+
+  session   Session  @relation(fields: [sessionId], references: [id])
+  sessionId Int
+
+  cpuUsage  Float
+  gpuUsage  Float
+  ramUsage  Float
+  duration  Int // seconds
+
+  createdAt DateTime @default(now())
+}

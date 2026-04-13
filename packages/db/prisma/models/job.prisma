@@ -1,0 +1,22 @@
+model Job {
+  id        Int      @id @default(autoincrement())
+
+  session   Session  @relation(fields: [sessionId], references: [id])
+  sessionId Int
+
+  command   String
+  status    JobStatus @default(RUNNING)
+
+  output    String?
+  error     String?
+  
+  createdAt DateTime @default(now())
+}
+
+
+enum   JobStatus {
+    PENDING
+    RUNNING
+    SUCCESS
+    FAILED
+}

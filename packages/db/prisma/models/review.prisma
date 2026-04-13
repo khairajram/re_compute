@@ -1,0 +1,14 @@
+model Review {
+  id        Int      @id @default(autoincrement())
+
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+
+  machine   HostMachine @relation(fields: [machineId], references: [id])
+  machineId Int
+
+  rating    Int
+  comment   String?
+
+  createdAt DateTime @default(now())
+}

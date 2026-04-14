@@ -1,15 +1,16 @@
 import { getGoogleUser } from "./providers/google.provider";
+// import your user model here
+// import jwt
 
-export const googleLogin = async (accessToken: string) => {
+export const googleLoginService = async (accessToken: string) => {
   const googleUser = await getGoogleUser(accessToken);
 
-  // Example:
   const { email, name, id } = googleUser;
 
   // 1. Check if user exists
-  let user = await findUserByEmail(email);
+  let user = await findUserByEmail(email); // implement this
 
-  // 2. If not → create user
+  // 2. Create if not exists
   if (!user) {
     user = await createUser({
       email,

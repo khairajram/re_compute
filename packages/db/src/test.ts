@@ -1,3 +1,8 @@
-import dotenv from "dotenv";
-dotenv.config();
-console.log("DB URL:", process.env.DATABASE_URL);
+import {prisma} from "@repo/db";
+
+function main(){
+    const res = prisma.user.findMany();
+    console.log(res);   
+}
+
+main()

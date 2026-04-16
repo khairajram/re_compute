@@ -1,9 +1,17 @@
-import Image from "next/image";
+import Button from "@/components/ui/Button";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+    <div className="min-h-screen flex items-center 
+    justify-center">
       hii
+      <Button>Primary</Button><br />
+
+      <Button variant="secondary">Secondary</Button><br />
+
+      <Button variant="outline">Outline</Button><br />
+
+      <Button size="lg">Large Button</Button><br />
     </div>
   );
 }

@@ -51,7 +51,7 @@ export const globalErrorHandler = (
     error =
       processed instanceof AppError
         ? processed
-        : new AppError("Internal Server Error", 500);
+        : new AppError(err.message, 500);
   }
 
   logger.error({
@@ -74,6 +74,6 @@ export const globalErrorHandler = (
     success: false,
     message: error.isOperational
       ? error.message
-      : "Something went wrong",
+      : "Something went wrong. Please try again later.",
   });
 };

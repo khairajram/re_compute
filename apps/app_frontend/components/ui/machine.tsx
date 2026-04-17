@@ -1,0 +1,74 @@
+import { Star,Cpu, HardDrive, MemoryStick,LocateIcon } from "lucide-react";
+
+interface MachineCardProps {
+  name: string;
+  isActive?: boolean;
+  rating: number;
+  price: number;
+  cpu: number;
+  ram: number;
+  storage: number;
+  gpu: string;
+  owner: string;
+}
+
+export default function MachineCard({ name, isActive, rating, price, cpu, ram, storage, gpu, owner }: MachineCardProps) {
+  return (
+    <div className="bg-[#050a14] text-white rounded-2xl p-5 w-full max-w-md shadow-lg border border-gray-800 hover:border-green-300 hover:border transition-all hover:scale-[1.005] duration-400 ease-in-out">
+      
+      
+      <div className="flex justify-between items-start">
+        <div>
+            <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+                {name}
+                <span
+                className={`w-2 h-2 rounded-full ${
+                    isActive ? "bg-green-500" : "bg-gray-500"
+                }`}
+                />
+            </h2>
+
+            <div className="flex items-center text-yellow-400 text-sm">
+                <Star className="w-4 h-4 fill-yellow-400 mr-1" />
+                {rating}
+            </div>
+            </div>
+
+            <p className="text-sm text-gray-400">
+              <div className="flex">
+                  {owner} · <LocateIcon className="w-4 h-4 mr-1" /> india
+              </div>
+            
+            </p>
+        </div>
+
+        <div className="text-green-400 font-semibold text-lg">
+            ${price}
+            <span className="text-sm text-gray-400">/hr</span>
+        </div>
+      </div>
+
+      
+      <div className="grid grid-cols-3 gap-4 mt-4 text-sm text-gray-300">
+        <div className="flex items-center gap-2">
+          <Cpu className="w-4 h-4" /> <span>{cpu} cores</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <MemoryStick className="w-4 h-4" /> <span>{ram}GB</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <HardDrive className="w-4 h-4" /> <span>{storage}GB</span>
+        </div>
+      </div>
+
+      <div className="mt-3 text-sm text-gray-300">
+         GPU: <span className="text-white font-medium">{gpu}</span>
+      </div>
+
+      <button  className={`mt-5 w-full ${isActive ? "bg-green-500 hover:cursor-pointer hover:bg-green-400" : "bg-gray-600"}    transition-all text-black font-semibold py-2 rounded-lg`}>
+        {isActive ? "Start Session" : "offline"}
+      </button>
+    </div>
+  );
+}

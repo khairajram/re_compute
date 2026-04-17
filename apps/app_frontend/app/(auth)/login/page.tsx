@@ -1,9 +1,10 @@
 "use client";
-
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import Image from "next/image";
 import  Link  from "next/link"
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -11,7 +12,6 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
-    // TODO: integrate your auth provider (NextAuth / Firebase)
     window.location.href = "/api/auth/google";
   };
 
@@ -23,7 +23,17 @@ export default function LoginPage() {
     const email = formData.get("email");
     const password = formData.get("password");
 
-    console.log(email, password);
+    console.log(BASE_URL);
+
+    const response = await fetch(`${BASE_URL}/api/login`, {
+      method: "POST",
+      headers: {  "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    }); 
+
+    console.log("Login response:", response);
+
+
 
     // TODO: call backend API
     setLoading(false);

@@ -1,5 +1,5 @@
 import  e, { Request, Response, NextFunction } from "express";
-import { getGoogleAccessToken } from "./providers/google.provider.js";
+import { getGoogleAccessToken, getGoogleUser } from "./providers/google.provider.js";
 import { googleLoginService } from "./auth.service.js";
 import bcrypt from "bcrypt";
 import {prisma} from "@repo/db";
@@ -9,10 +9,23 @@ import { config } from "../../core/config/config.js";
 import { de } from "zod/locales";
 
 export const googleAuth = (req: Request, res: Response) => {
-  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&response_type=code&scope=profile email`;
+  // const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&response_type=code&scope=profile email`;
+
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?` +
+    new URLSearchParams({
+      client_id: config.GOOGLE_CLIENT_ID,
+      redirect_uri: "http://localhost:4000/api/auth/google/callback",
+      response_type: "code",
+      scope: "profile email",
+      access_type: "offline",
+      prompt: "consent",
+    });
+
+    console.log(url)
 
   res.redirect(url);
 };
+
 
 export const simpleSignup = async (
   req: Request,
@@ -106,7 +119,9 @@ export const simpleLogin = async (
       }
     }
 
-    res.json({ message: "Login successful" });
+    res.redirect("http://localhost:3000/dashboard");
+
+
     
 
     if (existingUser &&existingUser.provider !== "local") {
@@ -144,13 +159,44 @@ export const googleCallback = async (
   try {
     const code = req.query.code as string;
 
-    // 1. Get access token
     const accessToken = await getGoogleAccessToken(code);
 
-    // 2. Login user
-    const result = await googleLoginService(accessToken);
+    const googleUser = await getGoogleUser(accessToken);
 
-    res.json(result);
+    const { email, name, id } : {
+      email : string,
+      name : string,
+      id : string
+    } = googleUser;
+
+    console.log(googleUser)
+
+    const existingUser = await prisma.user.findUnique({
+      where: {
+        email
+      }
+    });
+
+    let user;
+    if(!existingUser){
+      user = await prisma.user.create({ 
+        data: {
+          name,
+          email,
+          provider : "google",
+          providerId :  id
+        } });
+
+      if(!user){
+        return res.status(500).json({ success: false, message: "Failed to create user" });
+      }
+    }
+
+    const token = jwt.sign({ userId: user?.id }, config.JWT.SECRET, { expiresIn: config.JWT.EXPIRES_IN });
+    res.cookie("token", token, { httpOnly: true,secure : true, sameSite: "strict" });
+    res.redirect("http://localhost:3000/dashboard");
+
+
   } catch (err) {
     next(err);
   }

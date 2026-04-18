@@ -1,11 +1,16 @@
 import { googleAuth, googleCallback,authme, simpleLogin, simpleSignup } from "./auth.controller.js";
 import { Router } from "express";
+import passport from "passport";
+import { Request,Response } from "express";
+import { config } from "../../core/config/config.js"
 
 const router : Router = Router();
 
 
-router.get("/google", googleAuth);
-router.get("/google/callback", googleCallback);
+router.get("/auth/google", googleAuth);
+router.get("/auth/google/callback", googleCallback);
+
+
 
 
 

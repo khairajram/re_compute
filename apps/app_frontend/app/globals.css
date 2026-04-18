@@ -1,15 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #020617;
   --foreground: #171717;
 
 
-  /* Button tokens */
-  --primary: #2563eb;
+  --card: #0e1120;                 
+  --card-hover: #111827;                 
+  --card-foreground: #e5e7eb;
+  --card-border: #1F2937;
+  --card-border-hover: #22c55e;
+
+  --primary: #16a34a;              
+  --primary-hover: #22c55e;        
   --primary-foreground: #ffffff;
-  --secondary: #e5e7eb;
-  --secondary-foreground: #111827;
+
+
+  --secondary: #1f2937;            
+  --secondary-hover: #374151;
+  --secondary-foreground: #e5e7eb;
 }
 
 html {
@@ -44,22 +53,45 @@ html {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
+  --color-card: var(--card);
+  --color-card-hover: var(--card-hover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card-border: var(--card-border);
+  --color-card-border-hover: var(--card-border-hover);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-
-   --color-primary: var(--primary);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
 
   --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
   --color-secondary-foreground: var(--secondary-foreground);
 
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --background: #020617;
+  --foreground: #ffffff;
+
+  --card: #0e1120;                 
+  --card-hover: #111827;                 
+  --card-foreground: #e5e7eb;
+  --card-border: #1F2937;
+  --card-border-hover: #22c55e;
+
+  --primary: #0e7b36;             
+  --primary-hover: #178e43;       
+  --primary-foreground: #ffffff;
+
+
+  --secondary: #1f2937;            
+  --secondary-hover: #374151;
+  --secondary-foreground: #e5e7eb;
+
   }
 }
 

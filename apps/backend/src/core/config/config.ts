@@ -15,6 +15,8 @@ function getEnv(key: string, required = true): string {
 export const config = {
   NODE_ENV: getEnv("NODE_ENV", false) || "Development",
 
+  FRONTEND_URL: getEnv("FRONTEND_URL", false) || "http://localhost:3000",
+
   PORT: Number(getEnv("PORT", false)) || 3000,
 
   // DATABASE_URL: getEnv("DATABASE_URL"),

@@ -12,7 +12,7 @@ export interface MachineCardProps {
   owner: string;
 }
 
-export default function MachineCard({ name, isActive, review, pricePerHour, cpu, ram, storage, gpu, owner }: MachineCardProps) {
+export function MachineCardSkeleton({ name, isActive, review, pricePerHour, cpu, ram, storage, gpu, owner }: MachineCardProps) {
 
 
 

@@ -2,118 +2,166 @@
 
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import Image from "next/image";
 import Link from "next/link";
+import Navbar from "@/components/ui/Navbar";
 
-export default function LoginPage() {
+const BaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
+export default function SignupPage() {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
+    if (loading) return;
     setLoading(true);
-    window.location.href = "/api/auth/google";
+    window.location.href = `${BaseURL}/api/auth/google`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    setError("");
+    setSuccess("");
     setLoading(true);
 
     const formData = new FormData(e.target as HTMLFormElement);
-    const email = formData.get("email");
-    const password = formData.get("password");
+    const name = formData.get("name")?.toString().trim();
+    const email = formData.get("email")?.toString().trim();
+    const password = formData.get("password")?.toString();
 
-    console.log(email, password);
+    // 🔍 Basic validation
+    if (!name || !email || !password) {
+      setError("All fields are required");
+      setLoading(false);
+      return;
+    }
 
-    setLoading(false);
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${BaseURL}/api/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Signup failed");
+      }
+
+      setSuccess("Account created successfully! Redirecting...");
+      
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 1500);
+
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background text-foreground px-4 relative overflow-hidden">
+    <div className="min-h-screen flex bg-background text-foreground px-4 relative overflow-hidden">
+      <Navbar />
 
-      {/* Background glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(37,99,235,0.15),transparent),radial-gradient(circle_at_80%_80%,rgba(99,102,241,0.15),transparent)]" />
+      <div className="flex w-full items-center justify-center">
+        <div className="relative w-full max-w-md border bg-card text-card-foreground border-card-border rounded-2xl p-8 shadow-xl">
 
-      {/* Card */}
-      <div className="relative w-full max-w-md backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 shadow-2xl">
+          <div className="mb-6 flex flex-col items-center text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">Sign up</h1>
+            <p className="text-xl text-zinc-400 mt-1">
+              Create your Re-Compute account
+            </p>
+          </div>
 
-        {/* Header */}
-        <div className="mb-6 flex flex-col items-center text-center">
-          <Image
-            src="/logo.jpg"
-            alt="Re-Compute Logo"
-            width={52}
-            height={52}
-            className="mb-4 rounded-xl"
-          />
+          {/* 🔴 Error Message */}
+          {error && (
+            <div className="mb-4 text-sm text-red-400 bg-red-500/10 border border-red-500/20 p-2 rounded-lg text-center">
+              {error}
+            </div>
+          )}
 
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Welcome back 👋
-          </h1>
+          {/* 🟢 Success Message */}
+          {success && (
+            <div className="mb-4 text-sm text-green-400 bg-green-500/10 border border-green-500/20 p-2 rounded-lg text-center">
+              {success}
+            </div>
+          )}
 
-          <p className="text-sm text-zinc-400 mt-1">
-            Login to your Re-Compute account
-          </p>
-        </div>
+          {/* Google Button */}
+          <button
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 bg-white/10 text-white border border-white/20 font-medium py-2.5 rounded-xl hover:bg-white/20 transition disabled:opacity-50"
+          >
+            <FcGoogle size={20} />
+            {loading ? "Please wait..." : "Continue with Google"}
+          </button>
 
-        {/* Google */}
-        <button
-          onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 bg-white text-black font-medium py-2.5 rounded-xl hover:bg-zinc-200 transition active:scale-[0.98]"
-        >
-          <FcGoogle size={20} />
-          Continue with Google
-        </button>
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-zinc-700" />
+            <span className="text-xs text-zinc-400">OR</span>
+            <div className="flex-1 h-px bg-zinc-700" />
+          </div>
 
-        {/* Divider */}
-        <div className="flex items-center gap-4 my-6">
-          <div className="flex-1 h-px bg-white/10" />
-          <span className="text-xs text-zinc-400">OR</span>
-          <div className="flex-1 h-px bg-white/10" />
-        </div>
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              name="name"
+              type="text"
+              required
+              placeholder="Name"
+              className="w-full px-3 py-2.5 rounded-xl bg-zinc-800/60 border border-zinc-700 focus:ring-2 focus:ring-primary/40"
+            />
 
-          <div>
-            <label className="text-sm text-zinc-400">Email</label>
             <input
               name="email"
               type="email"
               required
-              className="mt-1 w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition"
-              placeholder="you@example.com"
+              placeholder="Email"
+              className="w-full px-3 py-2.5 rounded-xl bg-zinc-800/60 border border-zinc-700 focus:ring-2 focus:ring-primary/40"
             />
-          </div>
 
-          <div>
-            <label className="text-sm text-zinc-400">Password</label>
             <input
               name="password"
               type="password"
               required
-              className="mt-1 w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition"
-              placeholder="••••••••"
+              placeholder="Password"
+              className="w-full px-3 py-2.5 rounded-xl bg-zinc-800/60 border border-zinc-700 focus:ring-2 focus:ring-primary/40"
             />
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-primary text-primary-foreground font-medium py-2.5 rounded-xl hover:opacity-90 transition active:scale-[0.98] disabled:opacity-50"
-          >
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-primary text-primary-foreground font-medium py-2.5 rounded-xl hover:opacity-90 transition disabled:opacity-50"
+            >
+              {loading ? "Signing up..." : "Sign up"}
+            </button>
+          </form>
 
-        {/* Footer */}
-        <p className="text-sm text-zinc-500 mt-6 text-center">
-          Don’t have an account?{" "}
-          <Link
-            href="/signup"
-            className="text-primary hover:underline"
-          >
-            Sign up
-          </Link>
-        </p>
+          <p className="text-sm text-zinc-500 mt-6 text-center">
+            Already have an account?{" "}
+            <Link href="/login" className="text-primary hover:underline">
+              Sign in
+            </Link>
+          </p>
+
+        </div>
       </div>
     </div>
   );

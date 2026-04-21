@@ -7,7 +7,7 @@ model HostMachine {
   storage   Int    // in GB
   pricePerHour Float
 
-  isActive  Boolean @default(true)
+  isActive  Boolean @default(false)
 
   owner     User   @relation(fields: [ownerId], references: [id])
   ownerId   Int

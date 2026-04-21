@@ -1,10 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { config } from "../config/config";
-import { AppError } from "../errors/error";
+import { config } from "../config/config.js";
 
 export interface AuthRequest extends Request {
-  user?: any;
+  user?: { id: number };
 }
 
 export const protect = (
@@ -12,24 +11,31 @@ export const protect = (
   res: Response,
   next: NextFunction
 ) => {
-  let token;
+  let token =
+    req.cookies?.token ||
+    (req.headers.authorization?.startsWith("Bearer")
+      ? req.headers.authorization.split(" ")[1]
+      : null);
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
-  }
 
   if (!token) {
-    return next(new AppError("Not authorized", 401));
+    return res.status(401).json({ success: false, message: "Not authorized, no token" });
   }
 
+  
+
   try {
-    const decoded = jwt.verify(token, config.JWT.SECRET);
-    req.user = decoded;
+    const decoded = jwt.verify(token, config.JWT.SECRET) as { userId: number };
+
+    if(!decoded.userId){
+      return res.status(401).json({ success: false, message: "Invalid token" });
+      return;
+    }
+
+
+    req.user = { id: decoded.userId };
     next();
   } catch (error) {
-    return next(new AppError("Invalid token", 401));
+    return res.status(401).json({ success: false, message: "Invalid token" });
   }
 };

@@ -27,6 +27,7 @@ export const googleAuth = (req: Request, res: Response) => {
 };
 
 
+
 export const simpleSignup = async (
   req: Request,
   res: Response,
@@ -67,7 +68,7 @@ export const simpleSignup = async (
       if(!user){
         return res.status(500).json({ success: false, message: "Failed to create user" });
       }else{
-        return res.status(201).json({ success: true, message: "User created successfully" });
+        return res.status(201).json({ success: true, message: "User created successfully" }).redirect(`${config.FRONTEND_URL}/login`);
       }
 
     }catch(err){
@@ -95,7 +96,7 @@ export const simpleLogin = async (
       });
 
     if(!existingUser){
-      return res.status(400).json({ message: "User does not exist" });
+      
     }else{
       if(existingUser.provider !== "local"){
         return res.status(400).json({ success: false, message: "Use Google login" });
@@ -119,7 +120,7 @@ export const simpleLogin = async (
       }
     }
 
-    res.redirect("http://localhost:3000/dashboard");
+    res.redirect(`${config.FRONTEND_URL}/dashboard`);
 
 
     
@@ -136,14 +137,16 @@ export const simpleLogin = async (
 
 export const authme = async (req: Request, res: Response, next: NextFunction) => {
   try{
+    console.log(req.cookies)
     const token = req.cookies.token;
     if(!token){
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
     const decoded = jwt.verify(token, config.JWT.SECRET) as { userId: string };
     if(!decoded.userId){
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+      throw new Error("Invalid token");
     }
+    
     res.status(200).json({ success: true, userId : decoded.userId });
   } catch (err) {
     next(err);
@@ -169,7 +172,6 @@ export const googleCallback = async (
       id : string
     } = googleUser;
 
-    console.log(googleUser)
 
     const existingUser = await prisma.user.findUnique({
       where: {
@@ -193,8 +195,8 @@ export const googleCallback = async (
     }
 
     const token = jwt.sign({ userId: user?.id }, config.JWT.SECRET, { expiresIn: config.JWT.EXPIRES_IN });
-    res.cookie("token", token, { httpOnly: true,secure : true, sameSite: "strict" });
-    res.redirect("http://localhost:3000/dashboard");
+    res.cookie("token", token, { httpOnly: true,secure : true, sameSite: "none" });
+    res.redirect(`${config.FRONTEND_URL}/dashboard`);
 
 
   } catch (err) {

@@ -27,8 +27,8 @@ export default function Dashboard() {
           <MachineCard
             name="regx"
             isActive={true}
-            rating={4.5}
-            price={0.45}
+            review={4.5}
+            pricePerHour={0.45}
             cpu={16}
             ram={64}
             storage={500}
@@ -38,8 +38,8 @@ export default function Dashboard() {
           <MachineCard
             name="regx"
             isActive={false}
-            rating={4.5}
-            price={0.45}
+            review={4.5}
+            pricePerHour={0.45}
             cpu={16}
             ram={64}
             storage={500}

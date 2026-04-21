@@ -18,31 +18,13 @@ function StatCard({ title, value, extra, icon: Icon }) {
   );
 }
 
-export default function StatsSection() {
+export default function StatsSection({ stats }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <StatCard
-        title="Available Machines"
-        value="4"
-        icon={Server}
-      />
-      <StatCard
-        title="Active Sessions"
-        value="2"
-        extra="+2 today"
-        icon={Activity}
-      />
-      <StatCard
-        title="Total Hours"
-        value="27.0"
-        icon={Clock}
-      />
-      <StatCard
-        title="Total Spent"
-        value="$43.80"
-        extra="This week"
-        icon={DollarSign}
-      />
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <StatCard title="Available Machines" value={stats.total} icon={Server} />
+      <StatCard title="Active Sessions" value={stats.active} icon={Activity} />
+      <StatCard title="Total Hours" value={stats.totalHours} icon={Clock} />
+      <StatCard title="Total Spent" value={`$${stats.totalSpent.toFixed(2)}`} icon={DollarSign} />
     </div>
   );
 }

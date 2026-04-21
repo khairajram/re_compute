@@ -1,4 +1,5 @@
 "use client";
+import { usePathname } from "next/navigation";
 
 import { useState } from "react";
 import {
@@ -9,12 +10,25 @@ import {
   LogOut,
   Menu,
   X,
+  MonitorCheck,
+  Server,
 } from "lucide-react";
 import { SidebarItem } from "./sidebarItem";
+
+
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+
+  const navItems = [
+    { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+    { icon: MonitorCheck, label: "Current Sessions", href: "/sessions" },
+    { icon: Server, label: "Your Machines", href: "/machines" },
+    { icon: Cpu, label: "Host Panel", href: "/host" },
+    { icon: CreditCard, label: "Billing", href: "/billing" },
+  ];
 
   return (
     <>
@@ -78,30 +92,16 @@ export default function Sidebar() {
           </div>
 
           <nav className="space-y-2">
-            <SidebarItem
-              icon={LayoutDashboard}
-              label="Dashboard"
-              collapsed={collapsed}
-              isActive={true}
-            />
-            <SidebarItem
-              icon={Cpu}
-              label="Sessions"
-              collapsed={collapsed}
-              isActive={false}
-            />
-            <SidebarItem
-              icon={Cpu}
-              label="Host Panel"
-              collapsed={collapsed}
-              isActive={false}
-            />
-            <SidebarItem
-              icon={CreditCard}
-              label="Billing"
-              collapsed={collapsed}
-              isActive={false}
-            />
+            {navItems.map((item, index) => (
+              <SidebarItem
+                key={index}
+                icon={item.icon}
+                label={item.label}
+                href={item.href}
+                collapsed={collapsed}
+                isActive={pathname === item.href}
+              />
+            ))}
           </nav>
         </div>
 

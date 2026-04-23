@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Inter, Poppins } from "next/font/google";
+import { SocketProvider } from "./providers/SocketProvider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const poppins = Poppins({ subsets: ["latin"], weight: ["400","600"], variable: "--font-heading" });
@@ -21,7 +22,11 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${poppins.variable} h-full antialiased`}
     >
-      <body className="font-sans min-h-full flex flex-col bg-background text-foreground" >{children}</body>
+      <body className="font-sans min-h-full flex flex-col bg-background text-foreground" >
+        <SocketProvider>
+          {children}
+        </SocketProvider>
+      </body>
     </html>
   );
 }

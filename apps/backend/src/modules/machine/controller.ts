@@ -70,3 +70,32 @@ export const getMachine = async (
     next(err);
   }
 };
+
+
+export const getMachinebyId = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+
+    if(!req.user?.id){
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const machine = await prisma?.hostMachine.findUnique({
+      where: {
+        id: Number(req.params.id),
+      },
+    });
+
+
+    if(!machine){
+      return res.status(500).json({ success: false, message: "Failed to retrieve machine" });
+    }else{
+      return res.status(200).json({ success: true, message: "Machine retrieved successfully", machine });
+    }
+  } catch (err) {
+    next(err);
+  }
+};

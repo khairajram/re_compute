@@ -1,6 +1,7 @@
 import { Star,Cpu, HardDrive, MemoryStick,LocateIcon } from "lucide-react";
 
 export interface MachineCardProps {
+  id: string | number;
   name: string;
   isActive: boolean;
   review: number;
@@ -10,9 +11,10 @@ export interface MachineCardProps {
   storage: number;
   gpu: string;
   owner: string;
+  onClick?: () => void;
 }
 
-export default function MachineCard({ name, isActive, review, pricePerHour, cpu, ram, storage, gpu, owner }: MachineCardProps) {
+export default function MachineCard({  name, isActive, review, pricePerHour, cpu, ram, storage, gpu, owner, onClick }: MachineCardProps) {
 
 
 
@@ -70,8 +72,8 @@ export default function MachineCard({ name, isActive, review, pricePerHour, cpu,
          GPU: <span className="text-white font-medium">{gpu}</span>
       </div>
 
-      <button  className={`mt-5 w-full ${isActive ? "bg-green-500 hover:cursor-pointer hover:bg-green-400" : "bg-gray-600"}    transition-all text-black font-semibold py-2 rounded-lg`}>
-        {isActive ? "Start Session" : "offline"}
+      <button onClick={onClick} className={`mt-5 w-full ${isActive ? "bg-green-500 hover:cursor-pointer hover:bg-green-400" : "bg-gray-600"}    transition-all text-black font-semibold py-2 rounded-lg`}>
+        {isActive ? "Start Session" : "Start Machine"}
       </button>
     </div>
   );

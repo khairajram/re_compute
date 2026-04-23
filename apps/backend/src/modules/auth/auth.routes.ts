@@ -1,4 +1,4 @@
-import { googleAuth, googleCallback,authme, simpleLogin, simpleSignup } from "./auth.controller.js";
+import { googleAuth, googleCallback,authme, simpleLogin, simpleSignup, logout } from "./auth.controller.js";
 import { Router } from "express";
 import passport from "passport";
 import { Request,Response } from "express";
@@ -15,6 +15,7 @@ router.get("/auth/google/callback", googleCallback);
 
 
 router.post("/login", simpleLogin);
+router.get("/logout", logout);
 
 
 router.post("/signup", simpleSignup);

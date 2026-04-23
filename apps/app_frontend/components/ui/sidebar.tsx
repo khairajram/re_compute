@@ -1,7 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Cpu,
@@ -14,6 +14,8 @@ import {
   Server,
 } from "lucide-react";
 import { SidebarItem } from "./sidebarItem";
+import { BASE_URL } from "@/app/config";
+import router from "next/dist/shared/lib/router/router";
 
 
 
@@ -30,9 +32,28 @@ export default function Sidebar() {
     { icon: CreditCard, label: "Billing", href: "/billing" },
   ];
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+  
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+  
+    document.addEventListener("keydown", handleEsc);
+  
+    // prevent background scroll
+    document.body.style.overflow = "hidden";
+  
+    return () => {
+      document.removeEventListener("keydown", handleEsc);
+      document.body.style.overflow = "auto";
+    };
+  }, [mobileOpen]);
+
+
   return (
     <>
-      <div className="md:hidden fixed top-4 left-4 z-50">
+      <div className="md:hidden fixed top-4 left-4 z-50 ">
         <button
           onClick={() => setMobileOpen(true)}
           className="p-2 bg-[#020617] border border-gray-800 rounded-md text-gray-400 hover:text-white"
@@ -40,6 +61,8 @@ export default function Sidebar() {
           <Menu />
         </button>
       </div>
+
+      
 
       <div
         onClick={() => setMobileOpen(false)}
@@ -50,7 +73,9 @@ export default function Sidebar() {
       <div
         className={`
         fixed md:relative z-50 top-0 left-0 h-screen bg-[#020617] border-r border-gray-800 p-4
-        flex flex-col justify-between
+        flex flex-col 
+
+        overflow-hidden
 
         transition-all duration-500 ease-in-out
 
@@ -112,12 +137,21 @@ export default function Sidebar() {
             collapsed={collapsed}
             isActive={false}
           />
-          <SidebarItem
-            icon={LogOut}
-            label="Sign Out"
-            collapsed={collapsed}
-            isActive={false}
-          />
+          <div  onClick={async () => {
+              await fetch(`${BASE_URL}/api/logout`, {
+                method: "GET",
+                credentials: "include",
+              });
+              window.location.href = "/";
+            }} >
+            <SidebarItem
+              icon={LogOut}
+              label="Sign Out"
+              collapsed={collapsed}
+              isActive={false}
+            />
+          </div>
+          
         </div>
       </div>
     </>

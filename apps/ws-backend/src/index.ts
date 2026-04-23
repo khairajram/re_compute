@@ -10,11 +10,14 @@ const wss = new WebSocketServer({ server });
 
 interface UserType {
   socket: WebSocket;
-  roomId: number;
+  id: number;
   name: string;
 }
 
 let allSockets: UserType[] = [];
+
+let hostSockets: UserType;
+let userSockets: UserType;
 
 wss.on("connection", function (socket) {
   console.log("New client connected");
@@ -26,41 +29,64 @@ wss.on("connection", function (socket) {
 
   socket.on("message", (message) => {
     try {
+
       const parsedMessage = JSON.parse(message.toString());
+      console.log("Received message:", parsedMessage);
 
-      if (parsedMessage.type === "join") {
-        const { roomId, name } = parsedMessage.payload;
-        allSockets.push({ socket, roomId, name });
-
-        const usersInRoom = allSockets.filter(user => user.roomId === roomId);
-        const userCount = usersInRoom.length;
-
-        const roomUpdate = JSON.stringify({
-          type: "system",
-          users: userCount,
-        });
-
-        usersInRoom.forEach(user => user.socket.send(roomUpdate));
-        console.log(`User '${name}' joined room ${roomId}`);
+      if (parsedMessage.type === "REGISTER_USER") {
+        const { id, name } = parsedMessage;
+        userSockets = { socket, id : parsedMessage.id, name : parsedMessage.name };
+        
+        console.log(`user '${name}' joined room ${id}`);
       }
 
-      if (parsedMessage.type === "chat") {
-        const sender = allSockets.find((x) => x.socket === socket);
-        if (sender) {
+      if (parsedMessage.type === "REGISTER_HOST") {
+        console.log("Registering host with message:", parsedMessage);
+        const { id, name } = parsedMessage;
+        hostSockets = { socket, id, name };
+
+        console.log(`Host '${name}' joined room ${id}`);
+      }
+
+      // if (!userSockets?.socket) {
+      //   console.error("❌ No user connected");
+      //   return;
+      // }
+
+      // if (!hostSockets?.socket) {
+      //   console.error("❌ No host connected");
+      //   return;
+      // }
+      
+     
+
+      
+
+      if (parsedMessage.type === "JOB_RESULT" && parsedMessage.sender === "HOST") {
+
+        console.log("Forwarding job result to user:", parsedMessage);
+
+        const { output } = parsedMessage;
           const outgoing = JSON.stringify({
-            type: "chat",
-            name: sender.name,
-            message: parsedMessage.payload.message,
+            type: "JOB_RESULT",
+            output,
           });
 
-          allSockets.forEach((user) => {
-            if (user.roomId === sender.roomId) {
-              user.socket.send(outgoing);
-            }
+          userSockets.socket.send(outgoing);
+      }
+
+      if (parsedMessage.type === "JOB_QUERY" && parsedMessage.sender === "USER") {
+
+        console.log("Forwarding job query to host:", parsedMessage);
+
+        const { cmd, sessionId } = parsedMessage;
+          const outgoing = JSON.stringify({
+            type: "RUN_JOB",
+            sessionId,
+            command: cmd
           });
 
-          console.log(`[${sender.roomId}] ${sender.name}: ${parsedMessage.payload.message}`);
-        }
+          hostSockets.socket.send(outgoing);
       }
     } catch (err) {
       console.error("Failed to handle message:", err);
@@ -71,16 +97,16 @@ wss.on("connection", function (socket) {
     const sender = allSockets.find((x) => x.socket === socket);
     allSockets = allSockets.filter((user) => user.socket !== socket);
 
-    const usersInRoom = allSockets.filter(user => user.roomId === sender?.roomId);
-    const userCount = usersInRoom.length;
+    // const usersInRoom = allSockets.filter(user => user.id === sender?.id);
+    // const userCount = usersInRoom.length;
 
-    const roomUpdate = JSON.stringify({
-      type: "system",
-      users: userCount,
-    });
+    // const roomUpdate = JSON.stringify({
+    //   type: "system",
+    //   users: userCount,
+    // });
 
-    usersInRoom.forEach(user => user.socket.send(roomUpdate));
-    console.log("User disconnected");
+    // usersInRoom.forEach(user => user.socket.send(roomUpdate));
+    // console.log("User disconnected");
   });
 
   socket.on("error", (err) => {

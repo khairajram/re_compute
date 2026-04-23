@@ -76,6 +76,19 @@ export const simpleSignup = async (
     }
 };
 
+export const logout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    res.clearCookie("token");
+    res.json({ success: true, message: "Logged out successfully" });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const simpleLogin = async (
   req: Request,
   res: Response,

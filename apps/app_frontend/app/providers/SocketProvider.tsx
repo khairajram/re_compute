@@ -9,7 +9,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
 
   useEffect(() => {
-    const ws = new WebSocket(WEBSOCKET_URL); // your backend
+    const ws = new WebSocket(WEBSOCKET_URL); 
 
     ws.onopen = () => {
       console.log("Connected to the WebSocket server");
@@ -17,6 +17,10 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
     ws.onclose = () => {
       console.log("Disconnected from the WebSocket server");
+    };
+
+    ws.onerror = (error) => {
+      console.log("Error in WebSocket connection:", error);
     };
 
     setSocket(ws);

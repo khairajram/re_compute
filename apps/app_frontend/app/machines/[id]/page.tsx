@@ -7,9 +7,20 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { WEBSOCKET_URL } from "../../config";
 import { Copy } from "lucide-react";
+import { useSocket } from "@/app/providers/SocketProvider";
 
 export default function MachinePage() {
   const params = useParams();
+  const socket = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    // socket.onmessage = (event) => {
+    //   console.log("from socket", event.data);
+    // };
+    // socket.send(JSON.stringify({ type: "hii" }));
+  }, [socket]);
 
   const machineId = Array.isArray(params.id)
     ? params.id[0]
@@ -58,7 +69,7 @@ export default function MachinePage() {
   }, [machineId]);
 
   return (
-    <div className="h-screen flex">
+    <div className="h-screen flex min-w-[380px]">
       <Sidebar />
 
       <main className="flex-1 min-w-0 min-h-0 flex flex-col items-center p-6">
@@ -87,59 +98,15 @@ export default function MachinePage() {
         )}
 
         {!loading && !error && machine && (
-        <div className="w-full max-w-2xl pt-6">
-
-            <h1 className="text-4xl font-bold mb-8 text-center">
-                Machine Details
-            </h1>
-
-            <div className="bg-card border border-card-border rounded-2xl p-6 shadow-lg space-y-5 flex gap-4 flex-col">
-
-                <div className="flex justify-between">
-                <span className="text-gray-400">Name</span>
-                <span className="font-medium">{machine.name}</span>
-                </div>
-
-                <div className="flex justify-between">
-                <span className="text-gray-400">CPU</span>
-                <span className="font-medium">{machine.cpu} cores</span>
-                </div>
-
-                <div className="flex justify-between">
-                <span className="text-gray-400">GPU</span>
-                <span className="font-medium">{machine.gpu}</span>
-                </div>
-
-                <div className="flex justify-between">
-                <span className="text-gray-400">RAM</span>
-                <span className="font-medium">{machine.ram} GB</span>
-                </div>
-
-                <div className="flex justify-between">
-                <span className="text-gray-400">Storage</span>
-                <span className="font-medium">{machine.storage} TB</span>
-                </div>
-
-                <div className="flex justify-between border-t border-gray-800 pt-4">
-                <span className="text-gray-400">Price / Hour</span>
-                <span className="font-semibold text-green-400">
-                    $
-                    {machine.pricePerHour
-                    ? machine.pricePerHour.toFixed(2)
-                    : "0.00"}
-                </span>
-                </div>
-
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full min-w-[380px] p-6">
+              <MachineInfo machine={machine} />
+              <Stats machine={machine} />
+              <Commands machine={machine}/>
+              <MachineStatus machine={machine}/>
             </div>
-
-
-            <div className="mt-12 flex justify-center">
-                <button onClick={() => setShowCommands(true)} className="p-4 m-4  bg-primary hover:bg-primary-hover cursor-pointer rounded-lg font-semibold transition shadow-md text-xl">
-                Start Machine
-                </button>
-            </div>
-
-            </div>
+          </>
+          
         )}
 
         {!loading && !error && !machine && (
@@ -148,86 +115,278 @@ export default function MachinePage() {
           </div>
         )}
 
-        {machine && (
-  <>
-    
-
-    {/* Modal */}
-    <div className="p-4 mt-6">
-      <div className="bg-card border border-card-border rounded-xl p-6">
-
-        <h2 className="text-2xl font-semibold mb-4 text-center">
-          Run Your Machine
-        </h2>
-
-        <p className="text-gray-400 mb-4 text-center text-xl">
-          If container is new → use <strong>run</strong><br />
-          If already created → use <strong>start</strong>
-        </p>
-
-        <div className="mb-4">
-          <p className="text-xl text-gray-400 mb-1">Create & Run:</p>
-          <div className="mt-3 flex items-start gap-4 border border-gray-800 rounded-lg p-4">
-            <div className="bg-black rounded-md text-sm overflow-x-auto ">
-                <code id="run-cmd">
-                  {`docker run -it --name ${machine.name} 
-                  -e WS_SERVER_URL=${WEBSOCKET_URL} 
-                  -e HOST_ID=host-1 host-worker`}
-                </code>
-            </div>
-
-            <button
-                onClick={() => {
-                navigator.clipboard.writeText(
-                    `docker run -it --name ${machine.name} -e WS_SERVER_URL=${WEBSOCKET_URL}  -e HOST_ID=host-1 host-worker`
-                );
-                }}
-                className="text-sm text-green-400 hover:underline"
-            >
-                <Copy/>
-            </button>
-          </div>
-          </div>
-
-
-        <div className="mb-4">
-          <p className="text-xl text-gray-400 mb-1">Start Existing:</p>
-          <div className="mt-3 flex items-between gap-4 border border-gray-800 rounded-lg p-4">
-            <div className="bg-black rounded-md text-sm overflow-x-auto ">
-                <code id="start-cmd">
-                  {`docker start ${machine.name}`}
-                </code>
-            </div>
-
-            <button
-                onClick={() => {
-                navigator.clipboard.writeText(
-                    `docker start ${machine.name}`
-                );
-                }}
-                className="mt-2 text-sm text-green-400 hover:underline"
-            >
-                <Copy/>
-            </button>
-          </div>
-        </div>
-
-
-          <div className="mt-6 flex justify-center">
-          <button
-              onClick={() => setShowCommands(false)}
-              className="px-4 py-2 bg-secondary cursor-pointer hover:bg-gray-800 rounded-md"
-          >
-              Close
-          </button>
-          </div>
-
-          </div>
-          </div>
-        </>
-        )}
-
       </main>
     </div>
   );
+}
+
+
+function MachineStatus({ machine }: { machine: MachineCardProps }) {
+  const socket = useSocket();
+
+  const [status, setStatus] = useState<"online" | "offline" | "unknown">("unknown");
+  const [remainingTime, setRemainingTime] = useState("--");
+
+  const checkStatus = () => {
+    if (!socket) return;
+
+    socket.send(
+      JSON.stringify({
+        type: "CLIENT_CHECK_STATUS",
+        machineId: machine.id,
+      })
+    );
+  };
+
+  useEffect(() => {
+    if (!socket) return;
+
+    checkStatus();
+
+    const handler = (event: MessageEvent) => {
+      const data = JSON.parse(event.data);
+
+      if (data.type === "SERVER_PONG" && data.machineId === machine.id) {
+        setStatus(data.status);
+
+        // mock for now (replace with real backend value)
+        setRemainingTime(data.remainingTime || "25 min");
+      }
+    };
+
+    socket.addEventListener("message", handler);
+
+    return () => {
+      socket.removeEventListener("message", handler);
+    };
+  }, [socket, machine.id]);
+
+  return (
+    <div className="bg-card border border-card-border rounded-2xl p-6 shadow-lg space-y-5">
+      
+      {/* 🔝 Status Header */}
+      <h2 className="text-2xl font-semibold text-center">
+        Machine Status
+      </h2>
+
+      {/* 🟢 ONLINE UI */}
+      {status === "online" && (
+        <>
+          <div className="text-center text-green-500 font-semibold text-lg">
+            🟢 Machine is Online
+          </div>
+
+          {/* 4 boxes grid */}
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="bg-muted p-4 rounded-xl text-center">
+              <p className="text-gray-400 text-sm">Total Time</p>
+              <p className="font-medium">{remainingTime}</p>
+            </div>
+
+            <div className="bg-muted p-4 rounded-xl text-center">
+              <p className="text-gray-400 text-sm">Remaining</p>
+              <p className="font-medium">{remainingTime}</p>
+            </div>
+
+            <div className="bg-muted p-4 rounded-xl text-center">
+              <p className="text-gray-400 text-sm">Cycle</p>
+              <p className="font-medium">--</p>
+            </div>
+
+            <div className="bg-muted p-4 rounded-xl text-center">
+              <p className="text-gray-400 text-sm">Load</p>
+              <p className="font-medium">--</p>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 🔴 OFFLINE UI */}
+      {status === "offline" && (
+        <div className="text-center space-y-4">
+          <p className="text-red-500 font-semibold text-lg">
+            🔴 Machine is Offline
+          </p>
+
+          <button
+            onClick={checkStatus}
+            className="px-4 py-2 rounded-lg bg-primary text-white hover:opacity-90"
+          >
+            Check Again
+          </button>
+        </div>
+      )}
+
+      {/* ⚪ UNKNOWN / LOADING */}
+      {status === "unknown" && (
+        <div className="text-center text-gray-400">
+          Checking machine status...
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+// function Stats({ machine }: { machine: MachineCardProps }) {
+  
+
+//   return (
+//     <div className="bg-card border border-card-border rounded-2xl p-6 shadow-lg space-y-5 ">
+//         <h2 className="text-3xl font-semibold text-center ">
+//           Stats
+//         </h2>
+
+
+//     </div>
+//   );
+// }
+
+function Stats({ machine }: { machine: MachineCardProps }) {
+  // mock data (replace with real values later)
+  const stats = [
+    { label: "Total Hours", value: "120 hrs" },
+    { label: "Total Earnings", value: "₹15,000" },
+    { label: "Total Sessions", value: "320" },
+    { label: "Avg Session Time", value: "25 min" },
+  ];
+
+  return (
+    <div className="bg-card border border-card-border rounded-2xl p-6 shadow-lg space-y-5">
+      
+      <h2 className="text-2xl font-semibold text-center">
+        Stats
+      </h2>
+
+      {/* 2x2 Grid */}
+      <div className="grid grid-cols-2 gap-4">
+        {stats.map((stat, index) => (
+          <div
+            key={index}
+            className="bg-muted rounded-xl p-4 text-center hover:scale-105 transition"
+          >
+            <p className="text-gray-400 text-sm">{stat.label}</p>
+            <p className="text-lg font-semibold mt-1">{stat.value}</p>
+          </div>
+        ))}
+      </div>
+
+    </div>
+  );
+}+
+
+
+function Commands({ machine }: { machine: MachineCardProps }) {
+  const runCommand = `docker run -it --name ${machine.name} -e WS_SERVER_URL=${WEBSOCKET_URL} -e MACHINE_ID=${machine.id} host-worker`;
+  const startCommand = `docker start ${machine.name}`;
+
+  return (
+    <div className="bg-card border border-card-border rounded-2xl p-6 shadow-lg space-y-5 ">
+      
+      <h2 className="text-3xl font-semibold text-center ">
+        Run Your Machine
+      </h2>
+
+
+      <div className="mt-10">
+        <p className="text-xl text-gray-400 mb-1">Create & Run:</p>
+        <div className="mt-3 flex justify-between items-start gap-4 border border-gray-800 rounded-lg p-4">
+          
+          <div className="bg-black rounded-md text-sm overflow-x-auto">
+            <code>{runCommand}</code>
+          </div>
+
+          <button
+            onClick={() => navigator.clipboard.writeText(runCommand)}
+            className="text-sm text-green-400 hover:underline self-start"
+          >
+            <Copy />
+          </button>
+
+        </div>
+      </div>
+
+
+      <div>
+        <p className="text-xl text-gray-400 mb-1 mt-6">Start Existing:</p>
+        <div className="mt-3 flex justify-between items-start gap-4 border border-gray-800 rounded-lg p-4">
+          
+          <div className="bg-black rounded-md text-sm overflow-x-auto">
+            <code>{startCommand}</code>
+          </div>
+
+          <button
+            onClick={() => navigator.clipboard.writeText(startCommand)}
+            className="text-sm text-green-400 hover:underline self-start"
+          >
+            <Copy />
+          </button>
+
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+function MachineInfo({machine}: {machine: MachineCardProps}){
+  return(
+    <>
+      <div className="w-full max-w-2xl ">
+
+        
+
+        <div className="bg-card border border-card-border rounded-2xl p-6 shadow-lg space-y-5 flex gap-4 flex-col">
+
+          <div>
+            <h1 className="text-3xl font-bold mb-6 text-center">
+              Machine Details
+            </h1>
+          </div>
+
+            <div className="flex justify-between">
+            <span className="text-gray-400">Machine Id</span>
+            <span className="font-medium">{machine.id}</span>
+            </div>
+
+            <div className="flex justify-between">
+            <span className="text-gray-400">Name</span>
+            <span className="font-medium">{machine.name}</span>
+            </div>
+
+            <div className="flex justify-between">
+            <span className="text-gray-400">CPU</span>
+            <span className="font-medium">{machine.cpu} cores</span>
+            </div>
+
+            <div className="flex justify-between">
+            <span className="text-gray-400">GPU</span>
+            <span className="font-medium">{machine.gpu}</span>
+            </div>
+
+            <div className="flex justify-between">
+            <span className="text-gray-400">RAM</span>
+            <span className="font-medium">{machine.ram} GB</span>
+            </div>
+
+            <div className="flex justify-between">
+            <span className="text-gray-400">Storage</span>
+            <span className="font-medium">{machine.storage} TB</span>
+            </div>
+
+            <div className="flex justify-between border-t border-gray-800 pt-4">
+            <span className="text-gray-400">Price / Hour</span>
+            <span className="font-semibold text-green-400">
+                $
+                {machine.pricePerHour
+                ? machine.pricePerHour.toFixed(2)
+                : "0.00"}
+            </span>
+            </div>
+
+        </div>
+        </div>
+    </>
+  )
 }

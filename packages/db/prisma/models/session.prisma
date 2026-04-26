@@ -1,5 +1,5 @@
 model Session {
-  id        Int      @id @default(autoincrement())
+  id        String      @id @default(uuid())
   pricePerHour Float
   totalCost Float?
 
@@ -7,7 +7,7 @@ model Session {
   userId    Int
 
   machine   HostMachine @relation(fields: [machineId], references: [id])
-  machineId Int
+  machineId String
 
   startTime DateTime @default(now())
   endTime   DateTime?

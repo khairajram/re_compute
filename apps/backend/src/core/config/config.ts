@@ -23,7 +23,7 @@ export const config = {
 
   JWT: {
     SECRET: getEnv("JWT_SECRET"),
-    EXPIRES_IN: getEnv("JWT_EXPIRES_IN", false) || "7d",
+    EXPIRES_IN: getEnv("JWT_EXPIRES_IN", false) || "20d",
   },
 
   LOG_LEVEL: getEnv("LOG_LEVEL", false) || "info",

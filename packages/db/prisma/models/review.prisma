@@ -5,7 +5,7 @@ model Review {
   userId    Int
 
   machine   HostMachine @relation(fields: [machineId], references: [id])
-  machineId Int
+  machineId String
 
   rating    Int
   comment   String?

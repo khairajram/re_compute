@@ -102,7 +102,7 @@ export default function MachinePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full min-w-[380px] p-6">
               <MachineInfo machine={machine} />
               <Stats machine={machine} />
-              <Commands machine={machine}/>
+              <GetStarted machine={machine}/>
               <MachineStatus machine={machine}/>
             </div>
           </>
@@ -189,12 +189,12 @@ function MachineStatus({ machine }: { machine: MachineCardProps }) {
             </div>
 
             <div className="bg-muted p-4 rounded-xl text-center">
-              <p className="text-gray-400 text-sm">Cycle</p>
-              <p className="font-medium">--</p>
+              <p className="text-gray-400 text-sm">In Use</p>
+              <p className="font-medium">Ideal</p>
             </div>
 
             <div className="bg-muted p-4 rounded-xl text-center">
-              <p className="text-gray-400 text-sm">Load</p>
+              <p className="text-gray-400 text-sm">Session Started at</p>
               <p className="font-medium">--</p>
             </div>
           </div>
@@ -228,21 +228,6 @@ function MachineStatus({ machine }: { machine: MachineCardProps }) {
 }
 
 
-
-// function Stats({ machine }: { machine: MachineCardProps }) {
-  
-
-//   return (
-//     <div className="bg-card border border-card-border rounded-2xl p-6 shadow-lg space-y-5 ">
-//         <h2 className="text-3xl font-semibold text-center ">
-//           Stats
-//         </h2>
-
-
-//     </div>
-//   );
-// }
-
 function Stats({ machine }: { machine: MachineCardProps }) {
   // mock data (replace with real values later)
   const stats = [
@@ -274,10 +259,10 @@ function Stats({ machine }: { machine: MachineCardProps }) {
 
     </div>
   );
-}+
+}
 
 
-function Commands({ machine }: { machine: MachineCardProps }) {
+function GetStarted({ machine }: { machine: MachineCardProps }) {
   const runCommand = `docker run -it --name ${machine.name} -e WS_SERVER_URL=${WEBSOCKET_URL} -e MACHINE_ID=${machine.id} host-worker`;
   const startCommand = `docker start ${machine.name}`;
 
@@ -330,7 +315,7 @@ function Commands({ machine }: { machine: MachineCardProps }) {
   );
 }
 
-function MachineInfo({machine}: {machine: MachineCardProps}){
+export function MachineInfo({machine}: {machine: MachineCardProps}){
   return(
     <>
       <div className="w-full max-w-2xl ">

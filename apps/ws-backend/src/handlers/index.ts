@@ -1,9 +1,9 @@
-import { handleCheckStatus,handlePong } from "./host/checkStatus";
-import { registerUser } from "../services/userRegistry";
-import { registerHost } from "../services/hostRegistry";
+import { handleCheckStatus,handleFinalPong,handlePong } from "./host/checkStatus.js";
+import { registerUser } from "../services/userRegistry.js";
+import { registerHost } from "../services/hostRegistry.js";
 import { WebSocket } from "ws";
-import { handleRunJob } from "./client/handleJob";
-import { handleJobOutput } from "./host/jobResult";
+import { handleRunJob } from "./client/handleJob.js";
+import { handleJobOutput } from "./host/jobResult.js";
 
 export function handleMessage(socket: WebSocket, message: any) {
   try {
@@ -41,6 +41,13 @@ export function handleMessage(socket: WebSocket, message: any) {
       const { machineId,sessionId,success , output} = parsedMessage;
       return handleJobOutput(socket, machineId , sessionId,success,output);
     }
+
+    if (parsedMessage.type === "CONFIGURATION_RESULT"){
+      const { machineId,success, output} = parsedMessage;
+      return handleFinalPong(socket, machineId ,success,output);
+    }
+
+
     if (parsedMessage.type === "hii"){
       socket.send(JSON.stringify({
         type: "hello",

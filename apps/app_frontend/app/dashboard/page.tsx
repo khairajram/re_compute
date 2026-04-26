@@ -1,18 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/dist/client/components/navigation";
 import { BASE_URL } from "../config";
-import MachineCard, { MachineCardProps } from "@/components/ui/machine";
+import DashboardMachineCard, { MachineCardProps } from "@/components/ui/dashboard_machine_card";
 import StatsSection from "@/components/ui/machineStatsCard";
 import Sidebar from "@/components/ui/sidebar";
 
 export default function Dashboard() {
 
-
-  
-  
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [machines, setMachines] = useState<MachineCardProps[]>([]);
+
+    const router = useRouter();
   
     const [search, setSearch] = useState("");
     const [status, setStatus] = useState<"all" | "active" | "offline">("all");
@@ -20,7 +20,7 @@ export default function Dashboard() {
   
     const stats = {
       total: machines.length,
-      active: machines.filter((m) => m.isActive).length,
+      active: machines.filter((m) => m.isOnline).length,
       totalHours: 51, //machines.length * 6.5, // example logic
       totalSpent: 5 //machines.reduce((acc, m) => acc + m.pricePerHour, 0),
     };
@@ -68,8 +68,8 @@ export default function Dashboard() {
   
       const matchesStatus =
         status === "all" ||
-        (status === "active" && m.isActive) ||
-        (status === "offline" && !m.isActive);
+        (status === "active" && m.isOnline) ||
+        (status === "offline" && !m.isOnline);
   
       return matchesSearch && matchesStatus;
     })
@@ -98,28 +98,24 @@ export default function Dashboard() {
         </div>
 
         <div className="flex flex-col md:flex-row gap-6 mt-4">
-          <MachineCard
-            name="regx"
-            isActive={true}
-            review={4.5}
-            pricePerHour={0.45}
-            cpu={16}
-            ram={64}
-            storage={500}
-            gpu="RTX 4090"
-            owner="charlie"
-          />
-          <MachineCard
-            name="regx"
-            isActive={false}
-            review={4.5}
-            pricePerHour={0.45}
-            cpu={16}
-            ram={64}
-            storage={500}
-            gpu="RTX 4090"
-            owner="charlie"
-          />
+
+          {machines.map((machine) => (
+            <DashboardMachineCard
+              onClick={() => {router.push(`/dashboard/${machine.id}`);}}
+              key={machine.id}
+              id={machine.id}
+              name={machine.name}
+              isOnline={machine.isOnline}
+              inUse={machine.inUse}
+              review={machine.review}
+              pricePerHour={machine.pricePerHour}
+              cpu={machine.cpu}
+              ram={machine.ram}
+              storage={machine.storage}
+              gpu={machine.gpu}
+              owner={machine.owner}
+            />
+          ))}
         </div>
 
       </div>

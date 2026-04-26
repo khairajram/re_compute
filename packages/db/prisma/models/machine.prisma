@@ -1,13 +1,14 @@
 model HostMachine {
-  id        Int    @id @default(autoincrement())
-  name      String
+  id        String    @id @default(uuid())
+  name      String @unique
   cpu       Int    // number of cores
-  gpu       Int    // number of cores
+  gpu       Int?    // number of cores
   ram       Int    // in GB
-  storage   Int    // in GB
+  storage   Int?    // in GB
   pricePerHour Float
 
-  isActive  Boolean @default(false)
+  inUse  Boolean @default(false)
+  isOnline  Boolean @default(false)
 
   owner     User   @relation(fields: [ownerId], references: [id])
   ownerId   Int

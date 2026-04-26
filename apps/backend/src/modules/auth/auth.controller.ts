@@ -2,7 +2,7 @@ import  e, { Request, Response, NextFunction } from "express";
 import { getGoogleAccessToken, getGoogleUser } from "./providers/google.provider.js";
 import { googleLoginService } from "./auth.service.js";
 import bcrypt from "bcrypt";
-import {prisma} from "@repo/db";
+import {prisma} from "@repo/db/client";
 import jwt from "jsonwebtoken";
 import { userSignUPSchema } from "./auth.types.js";
 import { config } from "../../core/config/config.js";
@@ -109,10 +109,14 @@ export const simpleLogin = async (
       });
 
     if(!existingUser){
-      
+      return res.status(400).json({
+        success: false,
+        message: "User not found",
+      });
     }else{
       if(existingUser.provider !== "local"){
         return res.status(400).json({ success: false, message: "Use Google login" });
+        return;
       }else{
         const isPasswordValid = await bcrypt.compare(password, existingUser.password);    
 

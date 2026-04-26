@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createMachine, getMachine, getMachinebyId } from "./controller.js";
+import { createMachine, getAllMachines, getMachine, getMachinebyId, getSession, startSession } from "./controller.js";
 import { protect } from "../../core/middleware/auth.js";
 
 const router : Router = Router();
@@ -9,12 +9,13 @@ const router : Router = Router();
 
 router.post("/create",protect, createMachine);
 
+router.get("/getall",protect, getAllMachines);
+
 router.get("/get",protect, getMachine);
+
 router.get("/get/:id",protect, getMachinebyId);
+router.post("/start-session/:id",protect, startSession);
+router.get("/get-session",protect, getSession);
 
-
-// router.post("/signup", simpleSignup);
-
-// router.get("/auth/me",authme);
 
 export default router;

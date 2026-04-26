@@ -1,5 +1,5 @@
 import { WebSocket } from "ws";
-import { hostSockets } from "../../state/hosts";
+import { hostSockets } from "../../state/hosts.js";
 
 export function handleRunJob(socket: WebSocket, machineId: string , command: string,sessionId: string) {
     console.log("Handling job for machine:", machineId);

@@ -15,7 +15,7 @@ export interface MachineCardProps {
   onClick?: () => void;
 }
 
-export default function MachineCard({  name, isOnline, review, pricePerHour, cpu, ram, storage, gpu, owner, onClick }: MachineCardProps) {
+export default function DashboardMachineCard({  name, isOnline, review, pricePerHour, cpu, ram, storage, gpu, owner,inUse, onClick }: MachineCardProps) {
 
 
 
@@ -74,7 +74,7 @@ export default function MachineCard({  name, isOnline, review, pricePerHour, cpu
       </div>
 
       <button onClick={onClick} className={`mt-5 w-full bg-primary hover:cursor-pointer hover:bg-primary-hover text-xl  transition-all text-white font-semibold py-2 rounded-lg`}>
-        view details
+        Connect
       </button>
     </div>
   );

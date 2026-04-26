@@ -21,7 +21,8 @@ export default function Machines() {
 
   const stats = {
     total: machines.length,
-    active: machines.filter((m) => m.isActive).length,
+    online: machines.filter((m) => m.isOnline).length,
+    inUse: machines.filter((m) => m.inUse).length,
     totalHours: machines.length * 6.5, // example logic
     totalSpent: machines.reduce((acc, m) => acc + m.pricePerHour, 0),
   };
@@ -86,7 +87,7 @@ export default function Machines() {
 
     <main className="flex-1 min-w-0 min-h-0 flex flex-col">
 
-      {/* MODAL */}
+
       {isOpen && (
         <>
           <div className="fixed inset-0 bg-black/50 z-40" />

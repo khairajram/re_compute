@@ -13,14 +13,14 @@ export default function MachinePage() {
   const params = useParams();
   const socket = useSocket();
 
-  useEffect(() => {
-    if (!socket) return;
+  // useEffect(() => {
+  //   if (!socket) return;
 
-    // socket.onmessage = (event) => {
-    //   console.log("from socket", event.data);
-    // };
-    // socket.send(JSON.stringify({ type: "hii" }));
-  }, [socket]);
+  //   // socket.onmessage = (event) => {
+  //   //   console.log("from socket", event.data);
+  //   // };
+  //   // socket.send(JSON.stringify({ type: "hii" }));
+  // }, [socket]);
 
   const machineId = Array.isArray(params.id)
     ? params.id[0]
@@ -99,7 +99,7 @@ export default function MachinePage() {
 
         {!loading && !error && machine && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full min-w-[380px] p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full min-w-[380px] p-6 overflow-y-auto">
               <MachineInfo machine={machine} />
               <Stats machine={machine} />
               <GetStarted machine={machine}/>

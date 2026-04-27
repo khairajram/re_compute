@@ -92,6 +92,7 @@ function connect() {
             let newCwd;
             if (target === "~" || target.startsWith("~/")) {
                 newCwd = path.resolve(sessionDir, target.replace(/^~/, '.'));
+                console.log("New CWD:", newCwd);
             } else {
                 newCwd = path.resolve(currentCwd, target);
             }

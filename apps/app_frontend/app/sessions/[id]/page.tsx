@@ -30,7 +30,7 @@ const TerminalPage = () => {
   const [loading, setLoading] = useState(true);
 
   const [history, setHistory] = useState([
-    "Welcome to ReCompute Terminal 🚀",
+    "Welcome to ReCompute Terminal </",
     "Initializing connection...",
     "Establishing secure tunnel...",
     "Connection established.",

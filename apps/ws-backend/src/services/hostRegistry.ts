@@ -13,6 +13,10 @@ export async function registerHost(socket:WebSocket , machineId: string) {
         }
     }));
 
+    socket.send(JSON.stringify({
+      type: "SERVER_PING"
+    }));
+
     try {
       await prisma.hostMachine.update({
         where: { id: machineId },

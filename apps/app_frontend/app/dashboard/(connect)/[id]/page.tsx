@@ -27,7 +27,7 @@ export default function MachinePage(){
         });
         const data = await res.json();
         if(res.ok){
-            router.push(`/sessions/${machineId}`)
+            router.push(`/sessions/${data.session.id}`)
             console.log(data);
         }
     }

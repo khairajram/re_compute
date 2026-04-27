@@ -2,7 +2,7 @@ model ResourceUsage {
   id        Int      @id @default(autoincrement())
 
   session   Session  @relation(fields: [sessionId], references: [id])
-  sessionId Int
+  sessionId String
 
   cpuUsage  Float
   gpuUsage  Float

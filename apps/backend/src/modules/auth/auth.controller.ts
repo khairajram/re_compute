@@ -127,8 +127,8 @@ export const simpleLogin = async (
           });
         }else{
           const token = jwt.sign({ userId: existingUser.id }, config.JWT.SECRET, { expiresIn: config.JWT.EXPIRES_IN });
-          res.cookie("token", token, { httpOnly: true,secure : true, sameSite: "strict" });
-          res.json({ 
+          res.cookie("token", token, { httpOnly: true,secure : false, sameSite: "lax" });
+          return res.json({ 
             success: true,
             message: "Login successful"
            });
@@ -136,17 +136,6 @@ export const simpleLogin = async (
 
       }
     }
-
-    res.redirect(`${config.FRONTEND_URL}/dashboard`);
-
-
-    
-
-    if (existingUser &&existingUser.provider !== "local") {
-      throw new Error("Use Google login");
-    }
-
-    // res.json(result);
   } catch (err) {
     next(err);
   }
@@ -209,10 +198,12 @@ export const googleCallback = async (
       if(!user){
         return res.status(500).json({ success: false, message: "Failed to create user" });
       }
+    } else {
+      user = existingUser;
     }
 
-    const token = jwt.sign({ userId: user?.id }, config.JWT.SECRET, { expiresIn: config.JWT.EXPIRES_IN });
-    res.cookie("token", token, { httpOnly: true,secure : true, sameSite: "none" });
+    const token = jwt.sign({ userId: user.id }, config.JWT.SECRET, { expiresIn: config.JWT.EXPIRES_IN });
+    res.cookie("token", token, { httpOnly: true,secure : false, sameSite: "lax" });
     res.redirect(`${config.FRONTEND_URL}/dashboard`);
 
 

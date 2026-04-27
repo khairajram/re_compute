@@ -2,7 +2,7 @@ model Job {
   id        Int      @id @default(autoincrement())
 
   session   Session  @relation(fields: [sessionId], references: [id])
-  sessionId Int
+  sessionId String
 
   command   String
   status    JobStatus @default(RUNNING)

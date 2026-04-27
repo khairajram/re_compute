@@ -37,8 +37,15 @@ const TerminalPage = () => {
     "Type 'help' to see available commands",
   ]);
   const [input, setInput] = useState("");
+  const [cwd, setCwd] = useState("~");
   const inputRef = useRef<HTMLInputElement>(null);
   const terminalEndRef = useRef<HTMLDivElement>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+
+  const getPrompt = () => {
+    const machineName = session?.machine.name.toLowerCase().replace(/\s+/g, '_') || 'machine';
+    return `re_compute@${machineName}:${cwd}$ `;
+  };
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -79,60 +86,71 @@ const TerminalPage = () => {
     }
   }, [history]);
 
-  const handleCommand = (cmd: string) => {
-    let output = "";
+  useEffect(() => {
+    if (!session) return;
+    
+    const ws = new WebSocket("ws://localhost:8080");
+    wsRef.current = ws;
 
-    switch (cmd.toLowerCase()) {
-      case "help":
-        output = "Available commands: help, clear, about, date, whoami, neofetch";
-        break;
-      case "about":
-        output = "ReCompute Terminal Interface v1.0.0\nConnected to decentralized compute node.";
-        break;
-      case "date":
-        output = new Date().toString();
-        break;
-      case "whoami":
-        output = "root";
-        break;
-      case "neofetch":
-        output = session ? `
-            .-/+oossssoo+/-.               root@${session.machine.name}
-        \`:+ssssssssssssssssss+:\`           -------------------
-      -+ssssssssssssssssssyyssss+-         OS: ReCompute OS x86_64
-    .ossssssssssssssssssdMMMNysssso.       Host: Decentralized Node
-   /ssssssssssshdmmNNmmyNMMMMhssssss/      Kernel: 5.15.0-generic
-  +ssssssssshmydMMMMMMMNddddyssssssss+     Uptime: ${Math.floor((new Date().getTime() - new Date(session.startTime).getTime()) / 60000)} mins
- /sssssssshNMMMyhhyyyyhmNMMMNhssssssss/    Packages: 1337 (dpkg)
-.ssssssssdMMMNhsssssssssshNMMMdssssssss.   Shell: bash 5.1.16
-+sssssssNMMNyosssssssssssssyNMMMyssssss+   CPU: ${session.machine.cpu} Cores
-ossssssyMMNyssssssssssssssssshNMMNysssssso RAM: ${session.machine.ram} MB
-ossssssyMMNyssssssssssssssssshNMMNysssssso GPU: ${session.machine.gpu} Cores
-+sssssssNMMNyosssssssssssssyNMMMyssssss+   
-.ssssssssdMMMNhsssssssssshNMMMdssssssss.   
- /sssssssshNMMMyhhyyyyhdNMMMNhssssssss/    
-  +sssssssssdmydMMMMMMMMddddyssssssss+     
-   /ssssssssssshdmmNNmmyNMMMMhssssss/      
-    .ossssssssssssssssssdMMMNysssso.       
-      -+sssssssssssssssssyyyssss+-         
-        \`:+ssssssssssssssssss+:\`           
-            .-/+oossssoo+/-.               
-        ` : "System information not available.";
-        break;
-      case "clear":
+    ws.onopen = () => {
+        // Register user
+        ws.send(JSON.stringify({
+            type: "REGISTER_USER",
+            machineId: session.machine.id
+        }));
+    };
+
+    ws.onmessage = (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            if (data.type === "JOB_RESULT" || data.type === "HOST_JOB_RESULT") {
+                if (data.status === "offline") {
+                    setHistory(prev => [...prev, "[System]: Machine is offline or host agent is not connected."]);
+                } else if (data.sessionId === sessionId) {
+                    if (data.cwd) {
+                        setCwd(data.cwd);
+                    }
+                    if (data.output) {
+                        const outputLines = data.output.split('\n');
+                        setHistory(prev => [...prev, ...outputLines]);
+                    }
+                }
+            } else if (data.type === "SYSTEM_INFO") {
+                setHistory(prev => [...prev, `[System]: ${data.payload.message}`]);
+            }
+        } catch (e) {
+            console.error("Failed to parse message", e);
+        }
+    };
+
+    ws.onclose = () => {
+        setHistory(prev => [...prev, "[System]: Connection to terminal server closed."]);
+    };
+
+    return () => {
+        ws.close();
+    };
+  }, [session, sessionId]);
+
+  const handleCommand = (cmd: string) => {
+    if (!cmd) return;
+
+    if (cmd.toLowerCase() === "clear") {
         setHistory([]);
         return;
-      case "":
-        return;
-      default:
-        output = `bash: ${cmd}: command not found`;
     }
 
-    setHistory((prev) => [...prev, `root@machine:~# ${cmd}`]);
-    if (output) {
-        // Handle multi-line output
-        const lines = output.split('\n');
-        setHistory((prev) => [...prev, ...lines]);
+    setHistory((prev) => [...prev, `${getPrompt()}${cmd}`]);
+    
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && session) {
+        wsRef.current.send(JSON.stringify({
+            type: "CLIENT_JOB_QUERY",
+            machineId: session.machine.id,
+            command: cmd,
+            sessionId: sessionId
+        }));
+    } else {
+        setHistory((prev) => [...prev, "[Error]: Not connected to terminal server."]);
     }
   };
 
@@ -203,14 +221,14 @@ ossssssyMMNyssssssssssssssssshNMMNysssssso GPU: ${session.machine.gpu} Cores
                     >
                         <div className="pb-4">
                             {history.map((line, index) => (
-                                <div key={index} className={`${line.startsWith('root@') ? 'text-green-400 mt-1' : 'text-gray-300 whitespace-pre-wrap'} min-h-[1.5rem]`}>
+                                <div key={index} className={`${line.startsWith('re_compute@') ? 'text-green-400 mt-1' : 'text-gray-300 whitespace-pre-wrap'} min-h-[1.5rem]`}>
                                     {line}
                                 </div>
                             ))}
                         </div>
                         
                         <form onSubmit={handleSubmit} className="flex mt-1">
-                            <span className="text-green-400 mr-2">root@machine:~#</span>
+                            <span className="text-green-400 mr-2">{getPrompt()}</span>
                             <input
                                 ref={inputRef}
                                 value={input}

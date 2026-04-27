@@ -1,15 +1,23 @@
 {
-    "extends": "@repo/typescript-config/base.json",
-    "compilerOptions": {
+  "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "types": ["node"] ,
+    "types": ["node"],
     "module": "NodeNext",
-    "moduleResolution": "NodeNext"
+    "moduleResolution": "NodeNext",
+    "declaration": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "lib": ["es2022", "DOM", "DOM.Iterable"],
+    "noUncheckedIndexedAccess": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022"
   },
   "exclude": [
     "node_modules",
-    "dist",
-    "prisma.config.ts"
+    "dist"
   ]
 }

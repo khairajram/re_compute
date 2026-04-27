@@ -4,6 +4,9 @@ import { registerHost } from "../services/hostRegistry.js";
 import { WebSocket } from "ws";
 import { handleRunJob } from "./client/handleJob.js";
 import { handleJobOutput } from "./host/jobResult.js";
+import { hostSockets } from "../state/hosts.js";
+import { userSockets } from "../state/user.js";
+import { prisma } from "@repo/db/client";
 
 export function handleMessage(socket: WebSocket, message: any) {
   try {
@@ -38,8 +41,8 @@ export function handleMessage(socket: WebSocket, message: any) {
     }
 
     if (parsedMessage.type === "HOST_JOB_RESULT"){
-      const { machineId,sessionId,success , output} = parsedMessage;
-      return handleJobOutput(socket, machineId , sessionId,success,output);
+      const { machineId,sessionId,success , output, cwd} = parsedMessage;
+      return handleJobOutput(socket, machineId , sessionId,success,output,cwd);
     }
 
     if (parsedMessage.type === "CONFIGURATION_RESULT"){
@@ -61,7 +64,31 @@ export function handleMessage(socket: WebSocket, message: any) {
 }
 
 
-export function disconnectHandler(socket: WebSocket) {
+export async function disconnectHandler(socket: WebSocket) {
+
+  const hostIndex = hostSockets.findIndex((host) => host.socket === socket);
+  const userIndex = userSockets.findIndex((user) => user.socket === socket);
+
+  if (hostIndex !== -1) {
+    const isHost = hostSockets[hostIndex];
+    hostSockets.splice(hostIndex, 1);
+    console.log(`Host disconnected: ${isHost.machineId}`);
+    try {
+      await prisma.hostMachine.update({
+        where: { id: isHost.machineId },
+        data: { isOnline: false }
+      });
+      console.log(`Updated DB: Machine ${isHost.machineId} is offline`);
+    } catch (e) {
+      console.error(`Failed to update DB for machine ${isHost.machineId}`, e);
+    }
+  }
+
+  if (userIndex !== -1) {
+    const isUser = userSockets[userIndex];
+    userSockets.splice(userIndex, 1);
+    console.log(`User disconnected: ${isUser.machineId}`);
+  }
 
   console.log("Client disconnected");
 }

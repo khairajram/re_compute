@@ -1,5 +1,5 @@
 import { WebSocket } from "ws";
-import { disconnectHandler, errorHandler, handleMessage } from "../handlers/index";
+import { disconnectHandler, errorHandler, handleMessage } from "../handlers/index.js";
 
 
 export function handleConnection(socket: WebSocket) {

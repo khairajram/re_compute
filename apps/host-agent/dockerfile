@@ -1,0 +1,56 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies + dev tools
+RUN apt-get update && apt-get install -y \
+  curl \
+  git \
+  bash \
+  build-essential \
+  python3 \
+  python3-pip \
+  ca-certificates \
+  wget \
+  unzip \
+  nano \
+  vim \
+  sudo \
+  software-properties-common \
+  iproute2 \
+  net-tools \
+  docker.io \
+  && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js (latest LTS)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+  && apt-get install -y nodejs
+
+# Optional: install global npm tools
+RUN npm install -g \
+  tsx \
+  typescript \
+  pnpm \
+  yarn
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json ./
+
+# Install Node dependencies
+RUN npm install
+
+# Copy app code
+COPY . .
+
+# Create jobs directory (for your command execution)
+RUN mkdir -p /app/jobs
+
+# Environment variables
+ENV WS_SERVER_URL=ws://host.docker.internal:8080
+ENV MACHINE_ID=docker-host-1
+
+# Start your worker
+CMD ["npm", "run", "dev"]

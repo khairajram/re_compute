@@ -1,0 +1,54 @@
+databases:
+  - name: re-compute-db
+    databaseName: re_compute
+    user: re_compute_user
+    plan: free
+
+services:
+  # ─── HTTP API Backend ───────────────────────────────────────────────────────
+  - type: web
+    name: re-compute-backend
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter=backend... build
+    startCommand: node apps/backend/dist/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: re-compute-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: LOG_LEVEL
+        value: info
+      - key: FRONTEND_URL
+        sync: false          # Set this manually in the Render dashboard
+      - key: GOOGLE_CLIENT_ID
+        sync: false          # Set this manually in the Render dashboard
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false          # Set this manually in the Render dashboard
+
+  # ─── WebSocket Server ────────────────────────────────────────────────────────
+  - type: web
+    name: re-compute-ws
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter=ws-backend... build
+    startCommand: node apps/ws-backend/dist/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: DATABASE_URL
+        fromDatabase:
+          name: re-compute-db
+          property: connectionString

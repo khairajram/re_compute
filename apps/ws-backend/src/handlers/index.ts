@@ -72,22 +72,26 @@ export async function disconnectHandler(socket: WebSocket) {
   if (hostIndex !== -1) {
     const isHost = hostSockets[hostIndex];
     hostSockets.splice(hostIndex, 1);
-    console.log(`Host disconnected: ${isHost.machineId}`);
-    try {
-      await prisma.hostMachine.update({
-        where: { id: isHost.machineId },
-        data: { isOnline: false }
-      });
-      console.log(`Updated DB: Machine ${isHost.machineId} is offline`);
-    } catch (e) {
-      console.error(`Failed to update DB for machine ${isHost.machineId}`, e);
+    if (isHost) {
+      console.log(`Host disconnected: ${isHost.machineId}`);
+      try {
+        await prisma.hostMachine.update({
+          where: { id: isHost.machineId },
+          data: { isOnline: false }
+        });
+        console.log(`Updated DB: Machine ${isHost.machineId} is offline`);
+      } catch (e) {
+        console.error(`Failed to update DB for machine ${isHost.machineId}`, e);
+      }
     }
   }
 
   if (userIndex !== -1) {
     const isUser = userSockets[userIndex];
     userSockets.splice(userIndex, 1);
-    console.log(`User disconnected: ${isUser.machineId}`);
+    if (isUser) {
+      console.log(`User disconnected: ${isUser.machineId}`);
+    }
   }
 
   console.log("Client disconnected");

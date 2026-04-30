@@ -1,7 +1,7 @@
 import express from "express";
 import http from "http";
 import { WebSocketServer } from "ws";
-import { handleConnection } from "./connection";
+import { handleConnection } from "./connection.js";
 
 export function startWebSocketServer() {
   const app = express();

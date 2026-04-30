@@ -1,3 +1,3 @@
-import { startWebSocketServer } from "./core/server";
+import { startWebSocketServer } from "./core/server.js";
 
 startWebSocketServer();

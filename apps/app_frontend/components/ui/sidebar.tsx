@@ -28,7 +28,6 @@ export default function Sidebar() {
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
     { icon: MonitorCheck, label: "Current Sessions", href: "/sessions" },
     { icon: Server, label: "Your Machines", href: "/machines" },
-    { icon: Cpu, label: "Host Panel", href: "/host" },
     { icon: CreditCard, label: "Billing", href: "/billing" },
   ];
 
@@ -134,6 +133,7 @@ export default function Sidebar() {
           <SidebarItem
             icon={Settings}
             label="Settings"
+            href="#"
             collapsed={collapsed}
             isActive={false}
           />
@@ -147,6 +147,7 @@ export default function Sidebar() {
             <SidebarItem
               icon={LogOut}
               label="Sign Out"
+              href="#"
               collapsed={collapsed}
               isActive={false}
             />

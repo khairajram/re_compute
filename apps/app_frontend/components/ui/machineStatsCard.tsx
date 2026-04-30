@@ -1,6 +1,15 @@
 import { Server, Activity, Clock, DollarSign } from "lucide-react";
 
-function StatCard({ title, value, extra, icon: Icon }) {
+import React from 'react';
+
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  extra?: string;
+  icon: React.ElementType;
+}
+
+function StatCard({ title, value, extra, icon: Icon }: StatCardProps) {
   return (
     <div className="bg-[#0f172a] border border-gray-800 rounded-xl p-5 flex justify-between items-start w-full">
       <div>
@@ -18,7 +27,16 @@ function StatCard({ title, value, extra, icon: Icon }) {
   );
 }
 
-export default function StatsSection({ stats }) {
+interface StatsSectionProps {
+  stats: {
+    total: number;
+    active: number;
+    totalHours: number;
+    totalSpent: number;
+  };
+}
+
+export default function StatsSection({ stats }: StatsSectionProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard title="Available Machines" value={stats.total} icon={Server} />

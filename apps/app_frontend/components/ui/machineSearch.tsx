@@ -1,3 +1,5 @@
+import { Search } from "lucide-react";
+
 export function Filters({
   search,
   setSearch,
@@ -5,6 +7,13 @@ export function Filters({
   setStatus,
   sortRam,
   setSortRam,
+}: {
+  search: string;
+  setSearch: (value: string) => void;
+  status: string;
+  setStatus: (value: string) => void;
+  sortRam: string;
+  setSortRam: (value: string) => void;
 }) {
   return (
     <div className="flex flex-col md:flex-row gap-3 mt-6">

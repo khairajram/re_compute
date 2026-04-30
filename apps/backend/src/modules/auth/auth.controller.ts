@@ -1,6 +1,5 @@
 import  e, { Request, Response, NextFunction } from "express";
 import { getGoogleAccessToken, getGoogleUser } from "./providers/google.provider.js";
-import { googleLoginService } from "./auth.service.js";
 import bcrypt from "bcrypt";
 import {prisma} from "@repo/db/client";
 import jwt from "jsonwebtoken";
@@ -118,7 +117,7 @@ export const simpleLogin = async (
         return res.status(400).json({ success: false, message: "Use Google login" });
         return;
       }else{
-        const isPasswordValid = await bcrypt.compare(password, existingUser.password);    
+        const isPasswordValid = await bcrypt.compare(password, existingUser.password || "");    
 
         if(!isPasswordValid){
           return res.status(400).json({ 
@@ -126,7 +125,7 @@ export const simpleLogin = async (
             message: "Invalid password" 
           });
         }else{
-          const token = jwt.sign({ userId: existingUser.id }, config.JWT.SECRET, { expiresIn: config.JWT.EXPIRES_IN });
+          const token = jwt.sign({ userId: existingUser.id }, config.JWT.SECRET, { expiresIn: config.JWT.EXPIRES_IN as any });
           res.cookie("token", token, { httpOnly: true,secure : false, sameSite: "lax" });
           return res.json({ 
             success: true,
@@ -202,7 +201,7 @@ export const googleCallback = async (
       user = existingUser;
     }
 
-    const token = jwt.sign({ userId: user.id }, config.JWT.SECRET, { expiresIn: config.JWT.EXPIRES_IN });
+    const token = jwt.sign({ userId: user.id }, config.JWT.SECRET, { expiresIn: config.JWT.EXPIRES_IN as any });
     res.cookie("token", token, { httpOnly: true,secure : false, sameSite: "lax" });
     res.redirect(`${config.FRONTEND_URL}/dashboard`);
 

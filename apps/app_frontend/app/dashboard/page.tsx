@@ -14,15 +14,11 @@ export default function Dashboard() {
 
     const router = useRouter();
   
-    const [search, setSearch] = useState("");
-    const [status, setStatus] = useState<"all" | "active" | "offline">("all");
-    const [sortRam, setSortRam] = useState<"none" | "high" | "low">("none");
-  
     const stats = {
       total: machines.length,
       active: machines.filter((m) => m.isOnline).length,
-      totalHours: 51, //machines.length * 6.5, // example logic
-      totalSpent: 5 //machines.reduce((acc, m) => acc + m.pricePerHour, 0),
+      totalHours: 51,
+      totalSpent: 5
     };
   
     useEffect(() => {
@@ -59,25 +55,7 @@ export default function Dashboard() {
       fetchMachines();
     }, []);
   
-    const filteredMachines = machines
-    .filter((m) => {
-      const matchesSearch =
-        m.name.toLowerCase().includes(search.toLowerCase()) ||
-        m.owner.toLowerCase().includes(search.toLowerCase()) ||
-        m.gpu.toLowerCase().includes(search.toLowerCase());
-  
-      const matchesStatus =
-        status === "all" ||
-        (status === "active" && m.isOnline) ||
-        (status === "offline" && !m.isOnline);
-  
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      if (sortRam === "high") return b.ram - a.ram;
-      if (sortRam === "low") return a.ram - b.ram;
-      return 0;
-    });
+
 
   return (
     <div className="min-h-screen flex bg-[#020617] text-white">

@@ -90,7 +90,7 @@ export const getAllMachines = async (
       },
     });
 
-    if (machine.length === 0) {
+    if (!machine || machine.length === 0) {
       return res.status(200).json({
         success: true,
         message: "No machines found",
@@ -122,7 +122,7 @@ export const startSession = async (
   try {
     const checkMachine = await prisma?.hostMachine.findUnique({
       where: {
-        id
+        id: id as string
       },
     });
     if(!checkMachine){
@@ -137,7 +137,7 @@ export const startSession = async (
 
     const machine = await prisma?.hostMachine.update({
       where: {
-        id
+        id: id as string
       },
       data: {
         inUse: true,
@@ -147,8 +147,8 @@ export const startSession = async (
     const session = await prisma?.session.create({
       data: {
         userId: req.user?.id,
-        machineId: id,
-        pricePerHour: machine.pricePerHour,
+        machineId: id as string,
+        pricePerHour: machine?.pricePerHour || 0,
         startTime: new Date(),
         status:"ACTIVE",
       }
@@ -210,7 +210,7 @@ export const getMachinebyId = async (
 
     const machine = await prisma?.hostMachine.findUnique({
       where: {
-        id: req.params.id,
+        id: req.params.id as string,
       },
     });
 
@@ -224,3 +224,58 @@ export const getMachinebyId = async (
     next(err);
   }
 };
+
+export const releaseSession = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const {id} = req.params;
+  if(!id){
+    return res.status(400).json({ success: false, message: "Machine ID is required" });
+  }
+  try {
+    if(!req.user?.id){
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const session = await prisma?.session.findFirst({
+      where: {
+        machineId: id as string,
+        userId: req.user.id,
+        status: "ACTIVE"
+      }
+    });
+
+    if(!session){
+      return res.status(404).json({ success: false, message: "Active session not found" });
+    }
+
+    const updatedSession = await prisma?.session.update({
+      where: {
+        id: session.id
+      },
+      data: {
+        status: "COMPLETED",
+        endTime: new Date(),
+      }
+    });
+
+    const machine = await prisma?.hostMachine.update({
+      where: {
+        id: id as string
+      },
+      data: {
+        inUse: false,
+      }
+    });
+
+    if(!machine || !updatedSession){
+      return res.status(500).json({ success: false, message: "Failed to release machine" });
+    }else{
+      return res.status(200).json({ success: true, message: "Machine released successfully", session: updatedSession, machine });
+    }
+  } catch (err) {
+    next(err);
+  }
+};

@@ -19,7 +19,7 @@ export const config = {
 
   PORT: Number(getEnv("PORT", false)) || 3000,
 
-  // DATABASE_URL: getEnv("DATABASE_URL"),
+  DATABASE_URL: getEnv("DATABASE_URL"),
 
   JWT: {
     SECRET: getEnv("JWT_SECRET"),

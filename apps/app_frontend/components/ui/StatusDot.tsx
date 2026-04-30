@@ -17,9 +17,9 @@ export function StatusDot({ status, className }: StatusDotProps) {
   return (
     <span className="relative flex h-2 w-2">
       {(status === "online" || status === "running") && (
-        <span className={cn("absolute inline-flex h-full w-full animate-ping rounded-full opacity-40", statusColors[status])} />
+        <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-40 ${statusColors[status]}`} />
       )}
-      <span className={cn("relative inline-flex h-2 w-2 rounded-full", statusColors[status])} />
+      <span className={`relative inline-flex h-2 w-2 rounded-full ${statusColors[status]}`} />
     </span>
   );
 }

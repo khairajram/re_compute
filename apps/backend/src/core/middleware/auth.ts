@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { config } from "../config/config.js";
 
 export interface AuthRequest extends Request {
-  user?: { id: number };
+  user?: any;
 }
 
 export const protect = (

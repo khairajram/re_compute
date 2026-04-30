@@ -160,6 +160,27 @@ const TerminalPage = () => {
     setInput("");
   };
 
+  const handleReleaseMachine = async () => {
+    if (!session) return;
+    try {
+      const res = await fetch(`${BASE_URL}/api/machines/release-session/${session.machine.id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.success) {
+        router.push("/dashboard");
+      } else {
+        console.error("Failed to release machine:", data.message);
+      }
+    } catch (error) {
+      console.error("Error releasing machine:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen flex bg-[#020617] text-white">
         <Sidebar />
@@ -193,6 +214,12 @@ const TerminalPage = () => {
                         <div className="px-3 py-1 bg-green-500/10 text-green-400 border border-green-500/20 rounded-full font-medium text-xs">
                             {session.status}
                         </div>
+                        <button
+                            onClick={handleReleaseMachine}
+                            className="px-3 py-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 rounded-md font-medium text-xs transition-colors"
+                        >
+                            Release Machine
+                        </button>
                     </div>
                 )}
             </div>

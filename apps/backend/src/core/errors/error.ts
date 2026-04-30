@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { logger } from "../logger/logger";
+import { logger } from "../logger/logger.js";
 
 
 export class AppError extends Error {
@@ -51,7 +51,7 @@ export const globalErrorHandler = (
     error =
       processed instanceof AppError
         ? processed
-        : new AppError(err.message, 500);
+        : new AppError((err as any)?.message || "Internal Server Error", 500);
   }
 
   logger.error({

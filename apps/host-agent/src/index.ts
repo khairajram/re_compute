@@ -6,8 +6,53 @@ import path from "path";
 import pty from "node-pty";
 import chokidar from "chokidar";
 import { createJobDir } from "./createJobDir.js";
+import { execSync } from "child_process";
 
 dotenv.config();
+
+function getOrCreateRestrictedUser(sessionId: string): { uid?: number; gid?: number } {
+  if (process.platform === "win32") {
+    return {};
+  }
+  
+  // Create a safe, unique username from sessionId (UUID)
+  const username = `usr_${sessionId.replace(/-/g, "").substring(0, 10)}`;
+  
+  try {
+    // Check if user already exists
+    const uid = parseInt(execSync(`id -u ${username}`, { encoding: "utf-8" }).trim(), 10);
+    const gid = parseInt(execSync(`id -g ${username}`, { encoding: "utf-8" }).trim(), 10);
+    return { uid, gid };
+  } catch (err) {
+    // User does not exist, let's create it
+    try {
+      execSync(`useradd -M -s /bin/bash ${username}`, { stdio: "ignore" });
+      const uid = parseInt(execSync(`id -u ${username}`, { encoding: "utf-8" }).trim(), 10);
+      const gid = parseInt(execSync(`id -g ${username}`, { encoding: "utf-8" }).trim(), 10);
+      return { uid, gid };
+    } catch (createErr) {
+      console.error(`Failed to create restricted user ${username}:`, createErr);
+      return {};
+    }
+  }
+}
+
+function chownSessionDir(sessionId: string, sessionDir: string) {
+  if (process.platform === "win32") return;
+  const { uid, gid } = getOrCreateRestrictedUser(sessionId);
+  if (uid !== undefined && gid !== undefined) {
+    try {
+      execSync(`chown -R ${uid}:${gid} ${sessionDir}`, { stdio: "ignore" });
+      execSync(`chmod 700 ${sessionDir}`, { stdio: "ignore" });
+      
+      const jobsParentDir = path.dirname(sessionDir);
+      execSync(`chown root:root ${jobsParentDir}`, { stdio: "ignore" });
+      execSync(`chmod 711 ${jobsParentDir}`, { stdio: "ignore" });
+    } catch (e) {
+      console.error("Failed to chown session dir:", e);
+    }
+  }
+}
 
 const WS_URL = process.env.WS_SERVER_URL!;
 const MACHINE_ID = process.env.MACHINE_ID || "machine-1";
@@ -163,6 +208,11 @@ function connect() {
         }
 
         const shell = process.platform === "win32" ? "powershell.exe" : "bash";
+        
+        // Align folder permissions and obtain UID/GID
+        chownSessionDir(sessionId, sessionDir);
+        const { uid, gid } = getOrCreateRestrictedUser(sessionId);
+
         const ptyProcess = pty.spawn(shell, [], {
           name: "xterm-color",
           cols: message.cols || 80,
@@ -172,6 +222,7 @@ function connect() {
             ...process.env,
             PS1: "re_compute@agent:\\w\\$ "
           } as Record<string, string>,
+          ...(uid !== undefined && gid !== undefined ? { uid, gid } : {})
         });
 
         ptyProcess.onData((output) => {
@@ -220,6 +271,7 @@ function connect() {
       if (message.type === "FETCH_FILE_STRUCTURE") {
         const { sessionId } = message;
         const sessionDir = path.resolve(createJobDir(sessionId));
+        chownSessionDir(sessionId, sessionDir);
 
         // Send initial structure
         const tree = getFileTree(sessionDir, sessionDir);
@@ -323,6 +375,7 @@ function connect() {
 
         try {
           fs.writeFileSync(fullPath, content, "utf-8");
+          chownSessionDir(sessionId, sessionDir);
           ws.send(JSON.stringify({
             type: "WRITE_FILE_SUCCESS",
             machineId: MACHINE_ID,
@@ -357,6 +410,7 @@ function connect() {
             fs.mkdirSync(path.dirname(fullPath), { recursive: true });
             fs.writeFileSync(fullPath, "", "utf-8");
           }
+          chownSessionDir(sessionId, sessionDir);
         } catch (err) {
           console.error("Failed to create file/folder:", err);
         }

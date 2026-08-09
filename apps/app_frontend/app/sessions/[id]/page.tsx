@@ -236,6 +236,9 @@ const TerminalPage = () => {
   const [fileContent, setFileContent] = useState<string>("");
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved" | null>(null);
   
+  // Ref to synchronously track active file path and avoid websocket closure race conditions
+  const activeFilePathRef = useRef<string | null>(null);
+  
   // Inline node creation state
   const [creatingNode, setCreatingNode] = useState<CreatingNodeState | null>(null);
 
@@ -358,7 +361,7 @@ const TerminalPage = () => {
         } else if (data.type === "FILE_STRUCTURE" && data.sessionId === sessionId) {
           setFileTree(data.files || []);
         } else if (data.type === "FILE_CONTENT" && data.sessionId === sessionId) {
-          if (data.path === activeFilePath) {
+          if (data.path === activeFilePathRef.current) {
             if (data.error) {
               setFileContent(`/* Error reading file: ${data.error} */`);
               setSaveStatus(null);
@@ -368,7 +371,7 @@ const TerminalPage = () => {
             }
           }
         } else if (data.type === "WRITE_FILE_SUCCESS" && data.sessionId === sessionId) {
-          if (data.path === activeFilePath) {
+          if (data.path === activeFilePathRef.current) {
             setSaveStatus(data.success ? "saved" : "unsaved");
           }
         }
@@ -384,7 +387,7 @@ const TerminalPage = () => {
     return () => {
       ws.close();
     };
-  }, [session, sessionId, activeFilePath]);
+  }, [session, sessionId]);
 
   // Terminal DOM initialization
   useEffect(() => {
@@ -469,10 +472,11 @@ const TerminalPage = () => {
   }, [session, sessionId]);
 
   const handleSelectFile = (filePath: string) => {
-    if (saveStatus === "unsaved" && activeFilePath) {
-      triggerSave(activeFilePath, fileContent);
+    if (saveStatus === "unsaved" && activeFilePathRef.current) {
+      triggerSave(activeFilePathRef.current, fileContent);
     }
     
+    activeFilePathRef.current = filePath;
     setActiveFilePath(filePath);
     setFileContent("");
     setSaveStatus(null);

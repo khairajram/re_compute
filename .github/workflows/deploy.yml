@@ -61,6 +61,10 @@ jobs:
             echo "🏗️ Building monorepo..."
             pnpm build
 
+            # 7.5 Build host-agent Docker image
+            echo "🐳 Building host-agent Docker image..."
+            docker build -t host-agent -f apps/host-agent/dockerfile apps/host-agent
+
             # 8. Restart latest re_compute services
             echo "♻️ Restarting PM2 services..."
             pm2 restart next-app --update-env

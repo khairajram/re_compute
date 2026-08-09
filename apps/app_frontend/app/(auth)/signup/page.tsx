@@ -82,7 +82,7 @@ export default function SignupPage() {
           <div className="mb-6 flex flex-col items-center text-center">
             <h1 className="text-2xl font-semibold tracking-tight">Sign up</h1>
             <p className="text-xl text-zinc-400 mt-1">
-              Create your Re-Compute account
+              Create your CodeFlow account
             </p>
           </div>
 

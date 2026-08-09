@@ -5,8 +5,9 @@ export default function Footer() {
         
         {/* Brand */}
         <div>
-          <div className="flex items-center gap-2 text-white text-lg font-semibold mb-3">
-            ⚡ Re-Compute
+          <div className="flex items-center gap-1 text-2xl font-bold mb-3 select-none font-[family-name:var(--font-brand)]">
+            <span className="text-white">code</span>
+            <span className="bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent font-extrabold">Flow</span>
           </div>
           <p className="text-sm">
             Distributed computing made simple. Rent powerful machines or earn
@@ -34,7 +35,7 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div className="border-t border-gray-800 py-6 text-center text-gray-500 text-sm">
-        © {new Date().getFullYear()} Re-Compute. All rights reserved.
+        © {new Date().getFullYear()} CodeFlow. All rights reserved.
       </div>
     </footer>
   );

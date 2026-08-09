@@ -73,7 +73,7 @@ export default function LoginPage() {
               Welcome back
             </h1>
             <p className="text-xl text-zinc-400 mt-1">
-              Login to your Re-Compute account
+              Login to your CodeFlow account
             </p>
           </div>
 

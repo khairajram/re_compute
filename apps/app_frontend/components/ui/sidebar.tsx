@@ -85,15 +85,14 @@ export default function Sidebar({ defaultCollapsed = false }: { defaultCollapsed
       >
         <div>
           <div className="flex items-center justify-between mb-6">
-            <div className={`flex items-center gap-2 pt-4
+            <div className={`flex items-center gap-1.5 pt-4 select-none
                 ${collapsed ? "md:hidden" : "block"}`}>
-              <div className="bg-green-800 p-2 rounded-md">⚡</div>
-
               <div
-                className={`text-2xl pr-2 font-semibold transition-all duration-200 whitespace-nowrap
+                className={`text-2xl font-bold tracking-tight transition-all duration-200 whitespace-nowrap font-[family-name:var(--font-brand)]
                 ${collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"}`}
               >
-                Re Compute
+                <span className="text-white">code</span>
+                <span className="bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent font-extrabold">Flow</span>
               </div>
             </div>
 

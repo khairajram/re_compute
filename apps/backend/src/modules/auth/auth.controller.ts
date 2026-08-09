@@ -152,7 +152,16 @@ export const authme = async (req: Request, res: Response, next: NextFunction) =>
       throw new Error("Invalid token");
     }
     
-    res.status(200).json({ success: true, userId : decoded.userId });
+    const user = await prisma.user.findUnique({
+      where: { id: Number(decoded.userId) },
+      select: { id: true, name: true, email: true }
+    });
+    
+    if (!user) {
+      return res.status(401).json({ success: false, message: "User not found" });
+    }
+    
+    res.status(200).json({ success: true, userId : decoded.userId, user });
   } catch (err) {
     next(err);
   }

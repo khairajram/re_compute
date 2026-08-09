@@ -11,6 +11,7 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [machines, setMachines] = useState<MachineCardProps[]>([]);
+    const [userName, setUserName] = useState<string>("User");
 
     const router = useRouter();
   
@@ -22,6 +23,21 @@ export default function Dashboard() {
     };
   
     useEffect(() => {
+      const fetchUserProfile = async () => {
+        try {
+          const res = await fetch(`${BASE_URL}/api/auth/me`, {
+            method: "GET",
+            credentials: "include"
+          });
+          const data = await res.json();
+          if (data.success && data.user?.name) {
+            setUserName(data.user.name);
+          }
+        } catch (e) {
+          console.error("Failed to fetch user profile:", e);
+        }
+      };
+
       const fetchMachines = async () => {
         setError(null);
         setLoading(true);
@@ -52,6 +68,7 @@ export default function Dashboard() {
       }
       };
   
+      fetchUserProfile();
       fetchMachines();
     }, []);
   
@@ -67,7 +84,7 @@ export default function Dashboard() {
         <div className="">
           <h1 className="text-2xl font-bold mb-2 ml-12">Dashboard</h1>
           <p className="text-gray-400 mb-4">
-            Welcome back, charlie! Here’s an overview of your recent activity and machine stats.
+            Welcome back, {userName}! Here’s an overview of your recent activity and machine stats.
           </p>
         </div>
 

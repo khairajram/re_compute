@@ -29,7 +29,7 @@ export const config = {
   LOG_LEVEL: getEnv("LOG_LEVEL", false) || "info",
 
 
-  GOOGLE_CLIENT_ID : getEnv("GOOGLE_CLIENT_ID"),
-  GOOGLE_CLIENT_SECRET : getEnv("GOOGLE_CLIENT_SECRET"),
-  GOOGLE_REDIRECT_URI :getEnv("GOOGLE_REDIRECT_URI")
+  GOOGLE_CLIENT_ID : getEnv("GOOGLE_CLIENT_ID", false) || "",
+  GOOGLE_CLIENT_SECRET : getEnv("GOOGLE_CLIENT_SECRET", false) || "",
+  GOOGLE_REDIRECT_URI :getEnv("GOOGLE_REDIRECT_URI", false) || ""
 };

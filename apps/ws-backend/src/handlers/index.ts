@@ -69,11 +69,15 @@ export function handleMessage(socket: WebSocket, message: any) {
           host.socket.send(message.toString());
         }
       } else {
-        // Forward from host to user
-        const user = userSockets.find((u) => u.machineId === parsedMessage.machineId);
-        if (user) {
-          user.socket.send(message.toString());
-        }
+        // Forward from host to all users matching the machineId
+        const users = userSockets.filter((u) => u.machineId === parsedMessage.machineId);
+        users.forEach((user) => {
+          try {
+            user.socket.send(message.toString());
+          } catch (e) {
+            console.error("Failed to forward message to user:", e);
+          }
+        });
       }
     }
 

@@ -16,7 +16,11 @@ import {
   FolderPlus,
   Save,
   Loader2,
-  FileText
+  FileText,
+  ChevronDown,
+  ChevronUp,
+  Sidebar as SidebarIcon,
+  Palette
 } from "lucide-react";
 import Editor from "@monaco-editor/react";
 
@@ -24,9 +28,7 @@ interface MachineInfo {
   id: string;
   name: string;
   cpu: number;
-  gpu: number;
-  ram: number;
-  storage: number;
+  interactive?: boolean;
 }
 
 interface SessionInfo {
@@ -235,6 +237,13 @@ const TerminalPage = () => {
   const [activeFilePath, setActiveFilePath] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string>("");
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved" | null>(null);
+
+  // Layout resize and minimize states
+  const [explorerWidth, setExplorerWidth] = useState(240);
+  const [explorerMinimized, setExplorerMinimized] = useState(false);
+  const [terminalHeight, setTerminalHeight] = useState(240);
+  const [terminalMinimized, setTerminalMinimized] = useState(false);
+  const [editorTheme, setEditorTheme] = useState("vs-dark");
   
   // Ref to synchronously track active file path and avoid websocket closure race conditions
   const activeFilePathRef = useRef<string | null>(null);
@@ -281,14 +290,75 @@ const TerminalPage = () => {
         return "python";
       case "go":
         return "go";
+      case "rs":
+        return "rust";
+      case "cpp":
+      case "cxx":
+      case "cc":
+      case "c":
+      case "h":
+      case "hpp":
+        return "cpp";
+      case "java":
+        return "java";
+      case "cs":
+        return "csharp";
       case "sh":
       case "bash":
         return "shell";
-      case "rs":
-        return "rust";
+      case "sql":
+        return "sql";
+      case "yaml":
+      case "yml":
+        return "yaml";
       default:
         return "plaintext";
     }
+  };
+
+  // Drag resizer handlers
+  const startResizeExplorer = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = explorerWidth;
+
+    const doDrag = (moveEvent: MouseEvent) => {
+      const newWidth = startWidth + (moveEvent.clientX - startX);
+      if (newWidth > 150 && newWidth < 500) {
+        setExplorerWidth(newWidth);
+        setExplorerMinimized(false);
+      }
+    };
+
+    const stopDrag = () => {
+      document.removeEventListener("mousemove", doDrag);
+      document.removeEventListener("mouseup", stopDrag);
+    };
+
+    document.addEventListener("mousemove", doDrag);
+    document.addEventListener("mouseup", stopDrag);
+  };
+
+  const startResizeTerminal = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startHeight = terminalHeight;
+
+    const doDrag = (moveEvent: MouseEvent) => {
+      const newHeight = startHeight - (moveEvent.clientY - startY);
+      if (newHeight > 80 && newHeight < 550) {
+        setTerminalHeight(newHeight);
+        setTerminalMinimized(false);
+      }
+    };
+
+    const stopDrag = () => {
+      document.removeEventListener("mousemove", doDrag);
+      document.removeEventListener("mouseup", stopDrag);
+    };
+
+    document.addEventListener("mousemove", doDrag);
+    document.addEventListener("mouseup", stopDrag);
   };
 
   useEffect(() => {
@@ -471,6 +541,31 @@ const TerminalPage = () => {
     };
   }, [session, sessionId]);
 
+  // Handle terminal fit resize when height state updates
+  useEffect(() => {
+    if (xtermRef.current && !terminalMinimized) {
+      setTimeout(() => {
+        try {
+          const fitAddon = xtermRef.current._addons?.find((a: any) => a.fit);
+          if (fitAddon) {
+            fitAddon.fit();
+          }
+          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({
+              type: "PTY_RESIZE",
+              machineId: session?.machine.id,
+              sessionId: sessionId,
+              cols: xtermRef.current.cols,
+              rows: xtermRef.current.rows
+            }));
+          }
+        } catch (err) {
+          console.error("Fit resize failed:", err);
+        }
+      }, 50);
+    }
+  }, [terminalHeight, terminalMinimized, session, sessionId]);
+
   const handleSelectFile = (filePath: string) => {
     if (saveStatus === "unsaved" && activeFilePathRef.current) {
       triggerSave(activeFilePathRef.current, fileContent);
@@ -580,12 +675,12 @@ const TerminalPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#020617] text-white overflow-hidden">
+    <div className="min-h-screen flex bg-[#020617] text-white overflow-hidden select-none">
       <Sidebar defaultCollapsed={true} />
       
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Header */}
-        <div className="h-14 border-b border-gray-800 bg-[#050a14] flex items-center justify-between px-6 shrink-0 z-10">
+        <div className="h-14 border-b border-gray-800 bg-[#050a14] flex items-center justify-between px-6 shrink-0 z-10 select-none">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => router.push('/sessions')}
@@ -597,6 +692,15 @@ const TerminalPage = () => {
               <TerminalIcon className="w-4 h-4 text-green-500" />
               <h1 className="text-lg font-bold">Cloud IDE</h1>
             </div>
+            
+            {/* Sidebar toggle shortcut */}
+            <button 
+              onClick={() => setExplorerMinimized(!explorerMinimized)}
+              title="Toggle Sidebar Explorer"
+              className={`p-1.5 hover:bg-gray-800 rounded-lg transition-colors ${!explorerMinimized ? "text-green-500" : "text-gray-400"}`}
+            >
+              <SidebarIcon className="w-4 h-4" />
+            </button>
           </div>
           
           {session && (
@@ -637,10 +741,13 @@ const TerminalPage = () => {
         ) : (
           <div className="flex-1 flex overflow-hidden">
             {/* Workspace Explorer panel */}
-            <div className="w-60 border-r border-gray-800 bg-[#030712] flex flex-col shrink-0">
-              <div className="p-3 border-b border-gray-800 flex items-center justify-between">
+            <div 
+              style={{ width: explorerMinimized ? 0 : explorerWidth }}
+              className="border-r border-gray-800 bg-[#030712] flex flex-col shrink-0 overflow-hidden transition-all duration-150 ease-out"
+            >
+              <div className="p-3 border-b border-gray-800 flex items-center justify-between select-none">
                 <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Workspace</span>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                   <button 
                     onClick={() => handleCreateNode("", false)}
                     title="New File"
@@ -655,9 +762,16 @@ const TerminalPage = () => {
                   >
                     <FolderPlus className="w-4 h-4" />
                   </button>
+                  <button 
+                    onClick={() => setExplorerMinimized(true)}
+                    title="Minimize Sidebar"
+                    className="p-1 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-colors"
+                  >
+                    <ChevronDown className="w-4 h-4 rotate-90" />
+                  </button>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto p-2 scrollbar-thin">
+              <div className="flex-1 overflow-y-auto p-2 scrollbar-thin select-none">
                 {/* Inline root node creation */}
                 {creatingNode && creatingNode.parentPath === "" && (
                   <NewNodeInput 
@@ -688,39 +802,64 @@ const TerminalPage = () => {
               </div>
             </div>
 
+            {/* Vertical drag divider */}
+            {!explorerMinimized && (
+              <div 
+                onMouseDown={startResizeExplorer}
+                className="w-1 hover:w-1.5 bg-gray-850 hover:bg-green-500 cursor-col-resize select-none shrink-0 transition-all z-20"
+              />
+            )}
+
             {/* Monaco Editor and Terminal container */}
             <div className="flex-1 flex flex-col overflow-hidden bg-[#020617]">
               {/* Editor Workspace */}
-              <div className="flex-1 flex flex-col overflow-hidden relative">
+              <div className="flex-1 flex flex-col overflow-hidden relative select-text">
                 {activeFilePath ? (
                   <>
                     {/* Tab Header */}
-                    <div className="h-9 bg-[#040814] border-b border-gray-800 flex items-center justify-between px-4 text-xs shrink-0 select-none">
+                    <div className="h-9 bg-[#040814] border-b border-gray-800 flex items-center justify-between px-4 text-xs shrink-0 select-none z-10">
                       <div className="flex items-center gap-2 text-gray-300">
                         <FileText className="w-3.5 h-3.5 text-green-500" />
                         <span className="font-medium">{activeFilePath}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-400 font-mono">
-                        {saveStatus === "saving" && (
-                          <span className="flex items-center gap-1 text-amber-500">
-                            <Loader2 className="w-3 h-3 animate-spin" /> Saving...
-                          </span>
-                        )}
-                        {saveStatus === "saved" && (
-                          <span className="flex items-center gap-1 text-green-500">
-                            <Save className="w-3 h-3" /> Saved
-                          </span>
-                        )}
-                        {saveStatus === "unsaved" && (
-                          <span className="text-gray-400">Unsaved Changes</span>
-                        )}
+                      <div className="flex items-center gap-4">
+                        {/* Auto-save Status */}
+                        <div className="flex items-center gap-2 text-gray-400 font-mono">
+                          {saveStatus === "saving" && (
+                            <span className="flex items-center gap-1 text-amber-500">
+                              <Loader2 className="w-3 h-3 animate-spin" /> Saving...
+                            </span>
+                          )}
+                          {saveStatus === "saved" && (
+                            <span className="flex items-center gap-1 text-green-500">
+                              <Save className="w-3 h-3" /> Saved
+                            </span>
+                          )}
+                          {saveStatus === "unsaved" && (
+                            <span className="text-gray-400">Unsaved Changes</span>
+                          )}
+                        </div>
+
+                        {/* Theme Dropdown */}
+                        <div className="flex items-center gap-1.5 border-l border-gray-800 pl-3">
+                          <Palette className="w-3.5 h-3.5 text-gray-400" />
+                          <select 
+                            value={editorTheme}
+                            onChange={(e) => setEditorTheme(e.target.value)}
+                            className="bg-[#090d16] border border-gray-800 text-gray-300 text-[10px] px-1.5 py-0.5 rounded outline-none focus:border-green-500 cursor-pointer"
+                          >
+                            <option value="vs-dark">Dark Theme</option>
+                            <option value="light">Light Theme</option>
+                            <option value="hc-black">High Contrast</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                     {/* Editor view */}
                     <div className="flex-1 w-full overflow-hidden bg-[#020617] relative">
                       <Editor
                         height="100%"
-                        theme="vs-dark"
+                        theme={editorTheme}
                         language={getLanguage(activeFilePath)}
                         value={fileContent}
                         onChange={handleEditorChange}
@@ -736,25 +875,45 @@ const TerminalPage = () => {
                     </div>
                   </>
                 ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center gap-3 text-gray-500">
+                  <div className="flex-1 flex flex-col items-center justify-center gap-3 text-gray-500 select-none">
                     <FileCode className="w-12 h-12 text-gray-700" />
                     <p className="text-sm">Select a file from the workspace explorer to begin coding</p>
                   </div>
                 )}
               </div>
 
+              {/* Horizontal drag divider */}
+              {!terminalMinimized && (
+                <div 
+                  onMouseDown={startResizeTerminal}
+                  className="h-1 hover:h-1.5 bg-gray-850 hover:bg-green-500 cursor-row-resize select-none shrink-0 transition-all z-20"
+                />
+              )}
+
               {/* Terminal Panel */}
-              <div className="h-64 border-t border-gray-800 bg-[#080b12] flex flex-col shrink-0 overflow-hidden">
+              <div 
+                style={{ height: terminalMinimized ? 32 : terminalHeight }}
+                className="border-t border-gray-800 bg-[#080b12] flex flex-col shrink-0 overflow-hidden transition-all duration-150 ease-out"
+              >
                 <div className="h-8 bg-[#050a14] border-b border-gray-800/80 px-4 flex items-center justify-between shrink-0 select-none">
                   <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
                     <TerminalIcon className="w-3.5 h-3.5 text-gray-500" /> Terminal Shell
                   </span>
-                  <span className="text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full font-medium">
-                    Live
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full font-medium">
+                      Live
+                    </span>
+                    <button
+                      onClick={() => setTerminalMinimized(!terminalMinimized)}
+                      title={terminalMinimized ? "Expand Terminal" : "Minimize Terminal"}
+                      className="p-0.5 hover:bg-gray-800 rounded text-gray-400 hover:text-white transition-colors"
+                    >
+                      {terminalMinimized ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
                 </div>
                 <div 
-                  className="flex-1 p-2 relative overflow-hidden cursor-text"
+                  className={`flex-1 p-2 relative overflow-hidden cursor-text select-text ${terminalMinimized ? "hidden" : "block"}`}
                   onClick={() => xtermRef.current?.focus()}
                 >
                   <div ref={terminalRef} className="w-full h-full" />

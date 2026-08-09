@@ -5,7 +5,7 @@ import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import Navbar from "@/components/ui/Navbar";
 
-const BaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+import { BASE_URL as BaseURL } from "@/app/config";
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false);

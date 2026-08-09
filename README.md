@@ -1,221 +1,154 @@
-# 🚀 Re-Compute
+# 🚀 codeFlow
 
-A distributed compute platform that allows users to rent remote machines (laptops/PCs) and run workloads securely via a web interface.
+A premium, secure, and distributed compute platform that allows users to rent remote machines and run workloads in real-time through a feature-rich browser-based Cloud IDE.
 
-> 💡 Think of it as a lightweight version of cloud computing — powered by real user machines.
+> 💡 **Distributed Compute & Cloud IDE** — Powered by real user machines, isolated dynamically with Docker and sandboxed Linux permissions, and controlled via standard WebSockets.
 
 ---
 
-## 🧠 Overview
+## 🎨 Premium Features
 
-Re-Compute enables:
+### 🖥️ High-Fidelity Cloud IDE
+* **Draggable Resizable splits**: Adjust the layout dimensions dynamically by dragging the borders of the left file explorer or the bottom terminal.
+* **Panel Toggles**: Minimize the file explorer sidebar or collapse/expand the terminal panel with single-click header buttons to maximize screen real estate.
+* **Monaco Editor Enhancements**: 
+  * Support for C++, Python, Rust, Go, Java, TypeScript, SQL, YAML, and HTML/CSS.
+  * Custom **C++ Autocomplete Provider** loaded client-side with native keyword and snippet suggestion templates (e.g. typing `#in` suggests library inclusions, `main` expands standard boilerplate, `cout` generates console output logic).
+* **Theme Changer**: Select your workspace theme dynamically (`Dark Theme`, `Light Theme`, `High Contrast`) directly inside the editor tab.
+* **Authenticated Greeting**: Dashboard fetches and displays your authenticated profile name dynamically.
 
-- 🖥️ **Hosts** to share their machine resources (CPU, RAM, storage)
-- 👨‍💻 **Users** to rent and execute code remotely
-- 🔌 **Real-time communication** via WebSockets
-- ⚙️ **Containerized execution** using Docker
+### 🔒 Docker & PTY Linux Sandboxing
+* **Traversal Prevention**: The `/app/jobs` directory is protected with traversal-only (`711`) permissions, and individual session directories `/app/jobs/<sessionId>` are restricted with owner-only read-write-execute (`700`) permissions.
+* **Non-Privileged Process Spawning**: The host-agent creates restricted Unix users (e.g., `usr_eee39f5b45`) inside the container and maps all `node-pty` terminal shell PTYs to their specific `uid` and `gid`.
+* **Sync Permissions**: Host-agent automatically runs recursive permission syncing when files are written or directories are created, maintaining seamless synchronization between the file tree UI and the shell.
+
+### 📡 Real-time Multi-Client Syncing
+* The WebSocket backend utilizes group routing to broadcast PTY streams and file structure update notifications to **all active client tabs** connected to the same session, preventing message dropouts across multiple open browser tabs.
 
 ---
 
 ## 🏗️ Monorepo Structure
 
 ```
-Re_compute/
+codeFlow/
 │
 ├── apps/
-│   ├── app_frontend/     # Next.js frontend
-│   ├── backend/          # REST API (Express)
-│   └── websocket/        # WebSocket server
+│   ├── app_frontend/     # Next.js 14 Web UI & Cloud IDE
+│   ├── backend/          # REST API Backend (Express, JWT Auth)
+│   ├── ws-backend/       # WebSocket Routing Server
+│   └── host-agent/       # Containerized Node-PTY Host Daemon (Docker)
 │
 ├── packages/
-│   ├── db/               # Prisma DB client (shared)
-│   ├── ui/               # Shared UI components
-│   ├── typescript-config/# Shared TS config
-│   └── eslint-config/    # Shared lint rules
+│   ├── db/               # Shared Prisma ORM client wrapper (PostgreSQL)
+│   ├── ui/               # Shared UI component library
+│   ├── typescript-config/# Shared TS configurations
+│   └── eslint-config/    # Shared linting rule configurations
 │
-├── turbo.json
-├── pnpm-workspace.yaml
+├── .github/
+│   └── workflows/
+│       └── deploy.yml    # GitHub Actions Continuous Deployment to EC2
+│
+├── turbo.json            # Monorepo task runner configuration
+├── pnpm-workspace.yaml   # Workspace definitions
 └── package.json
 ```
 
 ---
 
-## ⚙️ Tech Stack
+## 🔌 Core Architecture
 
-### 🧩 Core
-- Node.js
-- TypeScript
-- pnpm (workspace)
-- Turborepo
-
-### 🌐 Frontend
-- Next.js
-- React
-
-### 🔧 Backend
-- Express.js
-- WebSocket (`ws` / `socket.io`)
-
-### 🗄️ Database
-- PostgreSQL
-- Prisma ORM
-
-### 🐳 Infrastructure
-- Docker (for isolated compute environments)
+```
+Client Browser (Cloud IDE) ──[HTTP]──> Next.js Frontend ──[API]──> Express REST API ──> Prisma / DB
+      │
+      └──────────────────────[WebSockets]──> WS Router ──> Host Agent (Docker Daemon) ──> Sandboxed PTY Shells
+```
 
 ---
 
 ## 🚀 Getting Started
 
-### 1️⃣ Clone the repo
-
+### 1️⃣ Clone the Repo
 ```bash
-git clone https://github.com/khairajram/re_compute
-cd re_compute
+git clone https://github.com/khairajram/re_compute.git codeflow
+cd codeflow
 ```
 
-### 2️⃣ Install dependencies
-
+### 2️⃣ Install Dependencies
 ```bash
 pnpm install
 ```
 
-### 3️⃣ Setup environment variables
+### 3️⃣ Configure Environment Variables
+Create env variables for your local workspace applications:
 
-Create `.env` inside `packages/db`:
-
+#### Backend (`apps/backend/.env`):
 ```env
-DATABASE_URL=your_database_url
+PORT=4000
+DATABASE_URL="postgresql://admin:secret@localhost:5432/mydb?schema=public"
+JWT_SECRET="your-super-secure-secret-key"
+JWT_EXPIRES_IN="20d"
+FRONTEND_URL="http://localhost:3000"
+
+# Optional (Will fall back to local auth if missing)
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+GOOGLE_REDIRECT_URI=""
 ```
 
-### 4️⃣ Setup database
+#### Frontend (`apps/app_frontend/.env`):
+```env
+NEXT_PUBLIC_API_BASE_URL="http://localhost:4000"
+NEXT_PUBLIC_WEBSOCKET_URL="ws://localhost:8080"
+```
 
+### 4️⃣ Database Migration & Seed
+Make sure PostgreSQL is running locally.
 ```bash
 pnpm --filter @repo/db db:generate
 pnpm --filter @repo/db db:migrate
 ```
 
-### 5️⃣ Run the project
-
+### 5️⃣ Run Development Servers
+Start all servers concurrently (Next.js, REST API, WebSocket) in development mode:
 ```bash
 pnpm dev
 ```
 
 ---
 
-## 🔁 What `pnpm dev` Does
+## 🐋 Running the Host Agent
 
-Runs all services using Turborepo:
-
-- 🧠 DB watcher (`tsc --watch`)
-- 🌐 Frontend (`next dev`)
-- 🔧 Backend (Node/tsx)
-- ⚡ WebSocket server
-
----
-
-## 🧩 Core Architecture
-
-```
-Frontend → Backend API → Database
-        ↘
-         → WebSocket Server → Host Machines
-```
-
----
-
-## 🔌 System Flow
-
-1. User logs in
-2. Selects a host machine
-3. Starts a compute session
-4. Commands sent via WebSocket
-5. Host executes inside Docker container
-6. Output streamed back in real-time
-
----
-
-## 📦 Shared DB Package
-
-Located at:
-
-```
-packages/db
-```
-
-Usage:
-
-```ts
-import { prisma } from "@repo/db";
-```
-
----
-
-## 🔐 Prisma Setup
-
-Uses a singleton pattern to prevent multiple DB connections:
-
-```ts
-export const prisma = globalThis.prisma ?? new PrismaClient();
-```
-
----
-
-## 📌 Scripts
-
-### Root
+The host-agent runs on the machine supplying compute resources. It requires Docker and is executed in a container:
 
 ```bash
-pnpm dev        # Run all services
-pnpm build      # Build all packages
-```
+# Build the host daemon image
+docker build -t host-agent ./apps/host-agent
 
-### DB Package
-
-```bash
-pnpm db:generate
-pnpm db:migrate
-pnpm db:push
-pnpm db:studio
+# Run the container (Requires access to host docker socket for sibling orchestration)
+docker run -d \
+  --name my-agent \
+  -e WS_SERVER_URL="ws://localhost:8080" \
+  -e MACHINE_ID="your-registered-machine-uuid" \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  host-agent
 ```
 
 ---
 
-## ⚠️ Important Notes
+## 🚀 Continuous Deployment (CI/CD)
 
-- Use **Node.js 20** (LTS)
-- Avoid spaces in project folder path
-- Always import DB from `@repo/db`
-- Do **NOT** create multiple Prisma instances
+The project includes an auto-deployment action configured in [deploy.yml](.github/workflows/deploy.yml).
 
----
+On push to the `main` branch, the workflow:
+1. Logs into the EC2 instance via SSH.
+2. Synchronizes with `origin/main`.
+3. Runs `pnpm install`, `Prisma client generation`, and `pnpm build`.
+4. Gracefully restarts the services using **PM2** (`pm2 restart all`).
 
-## 🚀 Future Improvements
-
-- 💳 Payment integration
-- 📊 Resource monitoring dashboard
-- 🔒 Secure sandbox execution
-- 📡 Job scheduling system
-- 🌍 Multi-region support
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome!
-
-```
-fork → clone → branch → PR 🚀
-```
+To enable: Add `EC2_HOST`, `EC2_USERNAME`, and `EC2_SSH_KEY` (.pem private key) as secrets under your GitHub repository **Settings ➡️ Secrets and variables ➡️ Actions**.
 
 ---
 
 ## 📄 License
 
-MIT License
-
----
-
-## 👨‍💻 Author
-
-Built with ❤️ by Khairaj
+This project is licensed under the MIT License.

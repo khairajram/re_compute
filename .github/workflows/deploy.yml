@@ -20,30 +20,53 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
+          script_stop: true
+
           script: |
-            # 1. Navigate to the project directory
-            cd /home/ubuntu/re_compute || cd /var/www/re_compute || exit 1
-            
-            # 2. Reset local changes (if any) and pull the latest code
+            set -e
+
+            echo "🚀 Starting deployment..."
+
+            # 1. Go to the latest re_compute repository
+            cd /home/ubuntu/re_compute
+
+            # 2. Fetch latest GitHub state
+            echo "📥 Fetching latest code..."
+            git fetch origin
+
+            # 3. Make EC2 exactly match GitHub main
+            echo "🔄 Resetting to origin/main..."
             git reset --hard origin/main
-            git pull origin main
-            
-            # 3. Load Node.js environment (load nvm if configured on server)
+
+            # 4. Load NVM / Node
             export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            
-            # 4. Install dependencies
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+            echo "Node: $(node --version)"
+            echo "PNPM: $(pnpm --version)"
+
+            # 5. Install dependencies
+            echo "📦 Installing dependencies..."
             pnpm install --frozen-lockfile
-            
-            # 5. Regenerate Prisma Client
+
+            # 6. Generate Prisma Client
+            echo "🔧 Generating Prisma Client..."
             pnpm --filter=@repo/db run db:generate
-            
-            # 6. Build the Monorepo
+
+            # 7. Build everything
+            echo "🏗️ Building monorepo..."
             pnpm build
-            
-            # 7. Restart all services managed by PM2
-            if command -v pm2 &> /dev/null; then
-              pm2 restart all
-            else
-              echo "⚠️ PM2 not found. Re-launching manually if required."
-            fi
+
+            # 8. Restart latest re_compute services
+            echo "♻️ Restarting PM2 services..."
+            pm2 restart next-app --update-env
+            pm2 restart server --update-env
+            pm2 restart ws-server --update-env
+
+            # 9. Save PM2 process list
+            pm2 save
+
+            echo "✅ Deployment completed successfully!"
+
+            # 10. Show final status
+            pm2 list

@@ -56,6 +56,25 @@ export function handleMessage(socket: WebSocket, message: any) {
         type: "hello",
         message: "hello from server",
       }));
+      return;
+    }
+
+    // Generic bidirectional router
+    if (parsedMessage.machineId) {
+      const isUser = userSockets.some((u) => u.socket === socket);
+      if (isUser) {
+        // Forward from user to host
+        const host = hostSockets.find((h) => h.machineId === parsedMessage.machineId);
+        if (host) {
+          host.socket.send(message.toString());
+        }
+      } else {
+        // Forward from host to user
+        const user = userSockets.find((u) => u.machineId === parsedMessage.machineId);
+        if (user) {
+          user.socket.send(message.toString());
+        }
+      }
     }
 
   } catch (err) {

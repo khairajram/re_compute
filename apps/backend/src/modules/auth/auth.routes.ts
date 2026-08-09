@@ -1,6 +1,5 @@
 import { googleAuth, googleCallback,authme, simpleLogin, simpleSignup, logout } from "./auth.controller.js";
 import { Router } from "express";
-import passport from "passport";
 import { Request,Response } from "express";
 import { config } from "../../core/config/config.js"
 

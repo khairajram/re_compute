@@ -67,7 +67,7 @@ export const simpleSignup = async (
       if(!user){
         return res.status(500).json({ success: false, message: "Failed to create user" });
       }else{
-        return res.status(201).json({ success: true, message: "User created successfully" }).redirect(`${config.FRONTEND_URL}/login`);
+        return res.status(201).json({ success: true, message: "User created successfully" });
       }
 
     }catch(err){

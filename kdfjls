@@ -1,0 +1,119 @@
+[33mcommit 8cecc1716d624bf1edb04243a872184174b8910c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: khairajram <khairajramtard.com>
+Date:   Thu Apr 30 09:12:08 2026 +0530
+
+    msg
+
+[33mcommit 98033a61d913b5b0d5395053cbc12006c7368151[m
+Author: khairajram <khairajramtard.com>
+Date:   Thu Apr 30 09:01:31 2026 +0530
+
+    chore: add render.yaml and fix ws-backend/backend TS build errors
+
+[33mcommit 02acdccdc5f735580edcae7ac6edc6304fe490d9[m
+Author: khairajram <khairajramtard.com>
+Date:   Thu Apr 30 08:54:25 2026 +0530
+
+    msg
+
+[33mcommit dc8a7754b8922dc26b67ad692a12d5c4d8dd516a[m
+Author: khairajram <khairajramtard.com>
+Date:   Tue Apr 28 01:16:16 2026 +0530
+
+    corrected all the things
+
+[33mcommit a6755994151e8c05368848cf8e488919eb88efc8[m
+Author: khairajram <khairajramtard.com>
+Date:   Mon Apr 27 23:05:35 2026 +0530
+
+    corrected all the things
+
+[33mcommit 8680f4b6d29a286c28a4d0d8e372a71dbc657084[m
+Author: khairajram <khairajramtard.com>
+Date:   Mon Apr 27 00:50:14 2026 +0530
+
+    added terminal and session page
+
+[33mcommit 2d6657b66924cbc71acb2e763fcb864929db7d29[m
+Author: khairajram <khairajramtard.com>
+Date:   Sat Apr 25 01:22:23 2026 +0530
+
+    make connection of WS and created some JOB_EXC end points
+
+[33mcommit a7b9c6dd0fe8a04b3762cfd010fbbd99ca694dc5[m
+Author: khairajram <khairajramtard.com>
+Date:   Fri Apr 24 01:55:41 2026 +0530
+
+    added dynamic page for machines
+
+[33mcommit 8e1ae2b67c427938d68a5634ab48a2649c64c276[m
+Author: khairajram <khairajramtard.com>
+Date:   Wed Apr 22 02:45:51 2026 +0530
+
+    added machine endpoint and UI fix:
+
+[33mcommit 4fc347c01e7f97fb6c8a2d2814556e72bd7cd05e[m
+Author: khairajram <khairajramtard.com>
+Date:   Sun Apr 19 00:39:18 2026 +0530
+
+    added log in with google and singin end point
+
+[33mcommit 1a2e58e0353fc5cc8a96565decba0f545f4d702f[m
+Author: khairajram <khairajramtard.com>
+Date:   Sat Apr 18 21:27:04 2026 +0530
+
+    created landing page
+
+[33mcommit 7bd2b07590d3da5c1e7d69cc6ec85c11b6031554[m
+Author: khairajram <khairajramtard.com>
+Date:   Sat Apr 18 00:37:23 2026 +0530
+
+    build machine card
+
+[33mcommit 63ad6a21686edcfa95a007ec3711fe99baaf26a0[m
+Author: khairajram <khairajramtard.com>
+Date:   Fri Apr 17 01:07:25 2026 +0530
+
+    added routes to sign up
+
+[33mcommit 18df199c02a9de4baeea8c56ceda0a63cf62f082[m
+Author: khairajram <khairajramtard.com>
+Date:   Tue Apr 14 23:21:16 2026 +0530
+
+    Oauth added
+
+[33mcommit 0b726755634bb343c8a0c6210907879679abce18[m
+Author: khairajram <khairajramtard.com>
+Date:   Tue Apr 14 22:19:25 2026 +0530
+
+    updated backend folder str. and created the api routes
+
+[33mcommit f3d35705f171cf7e772847fab75ea678d9679ceb[m
+Author: khairajram <khairajramtard.com>
+Date:   Mon Apr 13 18:48:23 2026 +0530
+
+    all schema designed
+
+[33mcommit 88affb5e8f572f75ae991b9ad7f30f4033ac888e[m
+Author: khairajram <khairajramtard.com>
+Date:   Sun Apr 12 01:34:10 2026 +0530
+
+    readme updated
+
+[33mcommit 892d96a2f11e9ec0196635f1becc17a730a2d06b[m
+Author: khairajram <khairajramtard.com>
+Date:   Sun Apr 12 01:30:40 2026 +0530
+
+    readme updated
+
+[33mcommit 6f0af0460abb0cf389cb8b19ff705bd31aa50c61[m
+Author: khairajram <khairajramtard.com>
+Date:   Sun Apr 12 01:23:21 2026 +0530
+
+    first commit
+
+[33mcommit 27eafd77968295f76bb0b4fe2739bb49e6d72d8c[m
+Author: khairajram <khairajramtard.com>
+Date:   Sat Apr 11 20:52:50 2026 +0530
+
+    Initial commit from create-turbo

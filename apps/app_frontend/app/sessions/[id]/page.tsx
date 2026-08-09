@@ -43,6 +43,61 @@ interface FileNode {
   children?: FileNode[];
 }
 
+interface CreatingNodeState {
+  parentPath: string;
+  isDirectory: boolean;
+}
+
+const NewNodeInput = ({
+  isDirectory,
+  onSubmit,
+  onCancel
+}: {
+  isDirectory: boolean;
+  onSubmit: (name: string) => void;
+  onCancel: () => void;
+}) => {
+  const [value, setValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      const trimmed = value.trim();
+      if (trimmed) {
+        onSubmit(trimmed);
+      } else {
+        onCancel();
+      }
+    } else if (e.key === "Escape") {
+      onCancel();
+    }
+  };
+
+  return (
+    <div className="pl-4 py-1 flex items-center gap-2">
+      {isDirectory ? (
+        <Folder className="w-4 h-4 text-amber-500 shrink-0" />
+      ) : (
+        <FileCode className="w-4 h-4 text-gray-500 shrink-0" />
+      )}
+      <input
+        ref={inputRef}
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={onCancel}
+        className="w-full bg-[#090d16] border border-green-500 text-xs px-1.5 py-0.5 rounded text-white outline-none focus:ring-1 focus:ring-green-500"
+        placeholder={isDirectory ? "folder name..." : "file name..."}
+      />
+    </div>
+  );
+};
+
 const FileTreeItem = ({
   node,
   onSelectFile,
@@ -50,7 +105,10 @@ const FileTreeItem = ({
   onDeleteNode,
   onCreateNode,
   expandedPaths,
-  toggleExpand
+  toggleExpand,
+  creatingNode,
+  onSubmitNewNode,
+  setCreatingNode
 }: {
   node: FileNode;
   onSelectFile: (path: string) => void;
@@ -59,6 +117,9 @@ const FileTreeItem = ({
   onCreateNode: (parentPath: string, isDirectory: boolean) => void;
   expandedPaths: Set<string>;
   toggleExpand: (path: string) => void;
+  creatingNode: CreatingNodeState | null;
+  onSubmitNewNode: (parentPath: string, name: string, isDirectory: boolean) => void;
+  setCreatingNode: (state: CreatingNodeState | null) => void;
 }) => {
   const isExpanded = expandedPaths.has(node.path);
 
@@ -102,9 +163,17 @@ const FileTreeItem = ({
           </div>
         </div>
         
-        {isExpanded && node.children && (
+        {isExpanded && (
           <div className="mt-0.5 border-l border-gray-800 ml-3.5">
-            {node.children.map((child, i) => (
+            {/* Inline creation input under this specific directory */}
+            {creatingNode && creatingNode.parentPath === node.path && (
+              <NewNodeInput 
+                isDirectory={creatingNode.isDirectory}
+                onSubmit={(name) => onSubmitNewNode(node.path, name, creatingNode.isDirectory)}
+                onCancel={() => setCreatingNode(null)}
+              />
+            )}
+            {node.children && node.children.map((child, i) => (
               <FileTreeItem 
                 key={i}
                 node={child}
@@ -114,6 +183,9 @@ const FileTreeItem = ({
                 onCreateNode={onCreateNode}
                 expandedPaths={expandedPaths}
                 toggleExpand={toggleExpand}
+                creatingNode={creatingNode}
+                onSubmitNewNode={onSubmitNewNode}
+                setCreatingNode={setCreatingNode}
               />
             ))}
           </div>
@@ -163,6 +235,9 @@ const TerminalPage = () => {
   const [activeFilePath, setActiveFilePath] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string>("");
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved" | null>(null);
+  
+  // Inline node creation state
+  const [creatingNode, setCreatingNode] = useState<CreatingNodeState | null>(null);
 
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<any>(null);
@@ -440,8 +515,17 @@ const TerminalPage = () => {
   };
 
   const handleCreateNode = (parentPath: string, isDirectory: boolean) => {
-    const name = prompt(`Enter ${isDirectory ? "folder" : "file"} name:`);
-    if (!name) return;
+    if (parentPath) {
+      setExpandedPaths(prev => {
+        const next = new Set(prev);
+        next.add(parentPath);
+        return next;
+      });
+    }
+    setCreatingNode({ parentPath, isDirectory });
+  };
+
+  const onSubmitNewNode = (parentPath: string, name: string, isDirectory: boolean) => {
     const newPath = parentPath ? `${parentPath}/${name}` : name;
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && session) {
       wsRef.current.send(JSON.stringify({
@@ -452,6 +536,7 @@ const TerminalPage = () => {
         isDirectory
       }));
     }
+    setCreatingNode(null);
   };
 
   const handleDeleteNode = (filePath: string) => {
@@ -492,7 +577,7 @@ const TerminalPage = () => {
 
   return (
     <div className="min-h-screen flex bg-[#020617] text-white overflow-hidden">
-      <Sidebar />
+      <Sidebar defaultCollapsed={true} />
       
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Header */}
@@ -569,7 +654,15 @@ const TerminalPage = () => {
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-2 scrollbar-thin">
-                {fileTree.length === 0 ? (
+                {/* Inline root node creation */}
+                {creatingNode && creatingNode.parentPath === "" && (
+                  <NewNodeInput 
+                    isDirectory={creatingNode.isDirectory}
+                    onSubmit={(name) => onSubmitNewNode("", name, creatingNode.isDirectory)}
+                    onCancel={() => setCreatingNode(null)}
+                  />
+                )}
+                {fileTree.length === 0 && !creatingNode ? (
                   <div className="text-xs text-gray-500 p-2 text-center">Empty Workspace</div>
                 ) : (
                   fileTree.map((node, i) => (
@@ -582,6 +675,9 @@ const TerminalPage = () => {
                       onCreateNode={handleCreateNode}
                       expandedPaths={expandedPaths}
                       toggleExpand={toggleExpand}
+                      creatingNode={creatingNode}
+                      onSubmitNewNode={onSubmitNewNode}
+                      setCreatingNode={setCreatingNode}
                     />
                   ))
                 )}
@@ -653,7 +749,10 @@ const TerminalPage = () => {
                     Live
                   </span>
                 </div>
-                <div className="flex-1 p-2 relative overflow-hidden">
+                <div 
+                  className="flex-1 p-2 relative overflow-hidden cursor-text"
+                  onClick={() => xtermRef.current?.focus()}
+                >
                   <div ref={terminalRef} className="w-full h-full" />
                 </div>
               </div>

@@ -19,8 +19,8 @@ import router from "next/dist/shared/lib/router/router";
 
 
 
-export default function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+export default function Sidebar({ defaultCollapsed = false }: { defaultCollapsed?: boolean }) {
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 

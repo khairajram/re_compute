@@ -14,7 +14,7 @@
     "start": "node dist/test.js",
     "db:generate": "prisma generate",
     "db:migrate": "dotenv -e .env -- prisma migrate dev",
-    "db:push": "dotenv -e ../../.env -- prisma db push",
+    "db:push": "node -e \"const fs = require('fs'); const { execSync } = require('child_process'); const path = ['.env', '../../.env', '../../apps/backend/.env'].find(fs.existsSync); if (path) { console.log('Loading env:', path); require('dotenv').config({ path }); } execSync('prisma db push', { stdio: 'inherit' });\"",
     "db:studio": "dotenv -e .env -- prisma studio"
   },
   "keywords": [],

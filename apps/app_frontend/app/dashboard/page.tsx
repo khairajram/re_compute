@@ -82,7 +82,7 @@ export default function Dashboard() {
       <div className="flex-1 p-6 ">
         
         <div className="">
-          <h1 className="text-2xl font-bold mb-2 ml-12">Dashboard 2.0</h1>
+          <h1 className="text-2xl font-bold mb-2 ml-12">Dashboard 2.000</h1>
           <p className="text-gray-400 mb-4">
             Welcome back, {userName}! Here’s an overview of your recent activity and machine stats.
           </p>

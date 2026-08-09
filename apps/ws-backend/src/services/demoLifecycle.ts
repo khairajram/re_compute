@@ -89,7 +89,7 @@ export function startDemoLifecycleManager() {
           // 4. Destroy the Docker Container on the EC2 host
           const containerName = `codeflow-demo-${session.machineId}`;
           console.log(`🐳 Force destroying container: ${containerName}`);
-          exec(`docker rm -f ${containerName}`, (err, stdout, stderr) => {
+          exec(`sudo docker rm -f ${containerName}`, (err, stdout, stderr) => {
             if (err) {
               console.error(`❌ Failed to destroy container ${containerName}:`, err, stderr);
             } else {

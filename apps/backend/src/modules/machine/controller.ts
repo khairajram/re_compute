@@ -152,7 +152,7 @@ export const startSession = async (
     if (machine.isDemo) {
       const containerName = `codeflow-demo-${machine.id}`;
       console.log(`🐳 Starting demo container: ${containerName}`);
-      exec(`docker rm -f ${containerName} 2>/dev/null; docker run -d --name ${containerName} --network host -e WS_SERVER_URL=ws://localhost:8080 -e MACHINE_ID=${machine.id} host-agent`, (err, stdout, stderr) => {
+      exec(`sudo docker rm -f ${containerName} 2>/dev/null; sudo docker run -d --name ${containerName} --network host -e WS_SERVER_URL=ws://localhost:8080 -e MACHINE_ID=${machine.id} host-agent`, (err, stdout, stderr) => {
         if (err) {
           console.error(`❌ Failed to start demo container ${containerName}:`, err, stderr);
         } else {
@@ -292,7 +292,7 @@ export const releaseSession = async (
     if (machine.isDemo) {
       const containerName = `codeflow-demo-${machine.id}`;
       console.log(`🐳 Destroying demo container: ${containerName}`);
-      exec(`docker rm -f ${containerName}`, (err, stdout, stderr) => {
+      exec(`sudo docker rm -f ${containerName}`, (err, stdout, stderr) => {
         if (err) {
           console.error(`❌ Failed to destroy demo container ${containerName}:`, err, stderr);
         } else {

@@ -1,0 +1,49 @@
+name: 🚀 Deploy to EC2 on Push
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚚 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ⚡ Execute SSH Commands to Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            # 1. Navigate to the project directory
+            cd /home/ubuntu/re_compute || cd /var/www/re_compute || exit 1
+            
+            # 2. Reset local changes (if any) and pull the latest code
+            git reset --hard origin/main
+            git pull origin main
+            
+            # 3. Load Node.js environment (load nvm if configured on server)
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            
+            # 4. Install dependencies
+            pnpm install --frozen-lockfile
+            
+            # 5. Regenerate Prisma Client
+            pnpm --filter=@repo/db run db:generate
+            
+            # 6. Build the Monorepo
+            pnpm build
+            
+            # 7. Restart all services managed by PM2
+            if command -v pm2 &> /dev/null; then
+              pm2 restart all
+            else
+              echo "⚠️ PM2 not found. Re-launching manually if required."
+            fi

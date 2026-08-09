@@ -53,6 +53,10 @@ jobs:
             echo "🔧 Generating Prisma Client..."
             pnpm --filter=@repo/db run db:generate
 
+            # 6.5 Push database schema
+            echo "🗄️ Pushing database schema..."
+            pnpm --filter=@repo/db db:push
+
             # 7. Build everything
             echo "🏗️ Building monorepo..."
             pnpm build

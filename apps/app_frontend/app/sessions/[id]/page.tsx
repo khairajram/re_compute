@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import Sidebar from "@/components/ui/sidebar";
-import { BASE_URL } from "@/app/config";
+import { BASE_URL, WEBSOCKET_URL } from "@/app/config";
 import { useParams, useRouter } from "next/navigation";
 import { 
   Terminal as TerminalIcon, 
@@ -493,7 +493,7 @@ const TerminalPage = () => {
   useEffect(() => {
     if (!session) return;
     
-    const ws = new WebSocket("ws://localhost:8080");
+    const ws = new WebSocket(WEBSOCKET_URL);
     wsRef.current = ws;
 
     ws.onopen = () => {

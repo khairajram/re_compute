@@ -8,7 +8,7 @@ export const getGoogleAccessToken = async (code: string) => {
       code,
       client_id: config.GOOGLE_CLIENT_ID,
       client_secret: config.GOOGLE_CLIENT_SECRET,
-      redirect_uri: "http://localhost:4000/api/auth/google/callback",
+      redirect_uri: config.GOOGLE_REDIRECT_URI || "http://localhost:4000/api/auth/google/callback",
       grant_type: "authorization_code",
     }
   );

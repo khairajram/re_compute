@@ -22,7 +22,7 @@ import {
   Sidebar as SidebarIcon,
   Palette
 } from "lucide-react";
-import Editor from "@monaco-editor/react";
+import Editor, { useMonaco } from "@monaco-editor/react";
 
 interface MachineInfo {
   id: string;
@@ -255,6 +255,108 @@ const TerminalPage = () => {
   const xtermRef = useRef<any>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const monaco = useMonaco();
+
+  useEffect(() => {
+    if (!monaco) return;
+
+    // Register C++ autocomplete provider
+    const cppProvider = monaco.languages.registerCompletionItemProvider("cpp", {
+      provideCompletionItems: (model, position) => {
+        const word = model.getWordUntilPosition(position);
+        const range = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: word.startColumn,
+          endColumn: word.endColumn,
+        };
+
+        const suggestions = [
+          // Keywords
+          ...[
+            "int", "double", "float", "char", "string", "bool", "void",
+            "class", "struct", "public", "private", "protected",
+            "if", "else", "for", "while", "do", "switch", "case",
+            "break", "continue", "return", "using", "namespace", "std",
+            "cout", "cin", "endl", "vector", "include", "define", "const"
+          ].map(keyword => ({
+            label: keyword,
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: keyword,
+            range
+          })),
+          // Snippets
+          {
+            label: "main",
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: "int main() {\n\t$0\n\treturn 0;\n}",
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: "Standard C++ main function",
+            range
+          },
+          {
+            label: "#include <iostream>",
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: "#include <iostream>\n",
+            documentation: "Include standard input/output stream",
+            range
+          },
+          {
+            label: "#include <vector>",
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: "#include <vector>\n",
+            documentation: "Include vector container sequence",
+            range
+          },
+          {
+            label: "#include <string>",
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: "#include <string>\n",
+            documentation: "Include string class library",
+            range
+          },
+          {
+            label: "#include <algorithm>",
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: "#include <algorithm>\n",
+            documentation: "Include algorithm library (sort, search, etc.)",
+            range
+          },
+          {
+            label: "cout",
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: "std::cout << $1 << std::endl;",
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: "Standard cout print statement",
+            range
+          },
+          {
+            label: "vector",
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: "std::vector<${1:int}> ${2:vec};",
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: "Declare a std::vector",
+            range
+          },
+          {
+            label: "for loop",
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: "for (int i = 0; i < ${1:count}; i++) {\n\t$0\n}",
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            documentation: "Standard for loop",
+            range
+          }
+        ];
+
+        return { suggestions };
+      }
+    });
+
+    return () => {
+      cppProvider.dispose();
+    };
+  }, [monaco]);
 
   const toggleExpand = (path: string) => {
     setExpandedPaths(prev => {

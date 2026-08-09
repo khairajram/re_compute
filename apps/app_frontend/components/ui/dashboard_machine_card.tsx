@@ -10,12 +10,13 @@ export interface MachineCardProps {
   cpu: number;
   ram: number;
   storage: number;
-  gpu: string;
-  owner: string;
+  gpu: string | null;
+  owner: string | null;
+  isDemo?: boolean;
   onClick?: () => void;
 }
 
-export default function DashboardMachineCard({  name, isOnline, review, pricePerHour, cpu, ram, storage, gpu, owner,inUse, onClick }: MachineCardProps) {
+export default function DashboardMachineCard({  name, isOnline, review, pricePerHour, cpu, ram, storage, gpu, owner,inUse, isDemo, onClick }: MachineCardProps) {
 
 
 
@@ -34,6 +35,11 @@ export default function DashboardMachineCard({  name, isOnline, review, pricePer
                     isOnline ? "bg-green-500" : "bg-gray-500"
                 }`}
                 />
+                {isDemo && (
+                  <span className="text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider">
+                    Demo
+                  </span>
+                )}
             </h2>
 
             <div className="flex items-center text-yellow-400 text-sm">
@@ -42,17 +48,20 @@ export default function DashboardMachineCard({  name, isOnline, review, pricePer
             </div>
             </div>
 
-            <p className="text-sm text-gray-400">
-              <div className="flex">
-                  {owner} · <LocateIcon className="w-4 h-4 mr-1" /> india
+            <div className="text-sm text-gray-400">
+              <div className="flex items-center gap-1">
+                  <span>{isDemo ? "System" : (owner || "Host")}</span>
+                  <span>·</span>
+                  <span className="flex items-center gap-0.5 text-xs">
+                    <LocateIcon className="w-3.5 h-3.5" /> {isDemo ? "Sandbox" : "India"}
+                  </span>
               </div>
-            
-            </p>
+            </div>
         </div>
 
         <div className="text-green-400 font-semibold text-lg">
-            ${ pricePerHour}
-            <span className="text-sm text-gray-400">/hr</span>
+            {isDemo ? "Free" : `$${pricePerHour}`}
+            {!isDemo && <span className="text-sm text-gray-400">/hr</span>}
         </div>
       </div>
 
@@ -70,7 +79,7 @@ export default function DashboardMachineCard({  name, isOnline, review, pricePer
       </div>
 
       <div className="mt-3 text-sm text-gray-300">
-         GPU: <span className="text-white font-medium">{gpu}</span>
+         GPU: <span className="text-white font-medium">{gpu || "Integrated"}</span>
       </div>
 
       <button onClick={onClick} className={`mt-5 w-full bg-primary hover:cursor-pointer hover:bg-primary-hover text-xl  transition-all text-white font-semibold py-2 rounded-lg`}>

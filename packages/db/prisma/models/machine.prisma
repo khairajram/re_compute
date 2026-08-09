@@ -9,9 +9,10 @@ model HostMachine {
 
   inUse  Boolean @default(false)
   isOnline  Boolean @default(false)
+  isDemo    Boolean @default(false)
 
-  owner     User   @relation(fields: [ownerId], references: [id])
-  ownerId   Int
+  owner     User?   @relation(fields: [ownerId], references: [id])
+  ownerId   Int?
 
   sessions  Session[]
   review  Review[]

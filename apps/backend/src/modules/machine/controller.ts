@@ -1,5 +1,7 @@
 import { NextFunction,Request,Response } from "express";
 import { AuthRequest } from "../../core/middleware/auth.js";
+import { exec } from "child_process";
+import { prisma } from "@repo/db/client";
 
 export const createMachine = async (
   req: AuthRequest,
@@ -78,32 +80,34 @@ export const getAllMachines = async (
   next: NextFunction
 ) => {
   try {
-
     if(!req.user?.id){
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    const machine = await prisma?.hostMachine.findMany({
+    // Try finding online, available, non-demo machines first
+    let machines = await prisma?.hostMachine.findMany({
       where: {
-        isOnline : true,
-        inUse : false,
+        isOnline: true,
+        inUse: false,
+        isDemo: false,
       },
+    }) || [];
+
+    // Fallback: If no real host machines are online, fetch available demo machines
+    if (machines.length === 0) {
+      machines = await prisma?.hostMachine.findMany({
+        where: {
+          isDemo: true,
+          inUse: false,
+        },
+      }) || [];
+    }
+
+    return res.status(200).json({ 
+      success: true, 
+      message: "Machines retrieved successfully", 
+      machine: machines 
     });
-
-    if (!machine || machine.length === 0) {
-      return res.status(200).json({
-        success: true,
-        message: "No machines found",
-        machine: [],
-      });
-    }
-
-
-    if(!machine){
-      return res.status(500).json({ success: false, message: "Failed to retrieve machines" });
-    }else{
-      return res.status(200).json({ success: true, message: "Machines retrieved successfully", machine });
-    }
   } catch (err) {
     next(err);
   }
@@ -135,7 +139,7 @@ export const startSession = async (
       return res.status(400).json({ success: false, message: "Machine is already in use" });
     }
 
-    const machine = await prisma?.hostMachine.update({
+    const machine = await prisma.hostMachine.update({
       where: {
         id: id as string
       },
@@ -144,12 +148,26 @@ export const startSession = async (
       }
     });
 
-    const session = await prisma?.session.create({
+    // If it's a demo machine, spawn the docker container dynamically on the EC2 host
+    if (machine.isDemo) {
+      const containerName = `codeflow-demo-${machine.id}`;
+      console.log(`🐳 Starting demo container: ${containerName}`);
+      exec(`docker rm -f ${containerName} 2>/dev/null; docker run -d --name ${containerName} --network host -e WS_SERVER_URL=ws://localhost:8080 -e MACHINE_ID=${machine.id} host-agent`, (err, stdout, stderr) => {
+        if (err) {
+          console.error(`❌ Failed to start demo container ${containerName}:`, err, stderr);
+        } else {
+          console.log(`✅ Demo container ${containerName} started:`, stdout.trim());
+        }
+      });
+    }
+
+    const session = await prisma.session.create({
       data: {
         userId: req.user?.id,
         machineId: id as string,
         pricePerHour: machine?.pricePerHour || 0,
         startTime: new Date(),
+        lastActiveAt: new Date(),
         status:"ACTIVE",
       }
     });
@@ -251,7 +269,7 @@ export const releaseSession = async (
       return res.status(404).json({ success: false, message: "Active session not found" });
     }
 
-    const updatedSession = await prisma?.session.update({
+    const updatedSession = await prisma.session.update({
       where: {
         id: session.id
       },
@@ -261,7 +279,7 @@ export const releaseSession = async (
       }
     });
 
-    const machine = await prisma?.hostMachine.update({
+    const machine = await prisma.hostMachine.update({
       where: {
         id: id as string
       },
@@ -269,6 +287,19 @@ export const releaseSession = async (
         inUse: false,
       }
     });
+
+    // If it's a demo machine, destroy the container dynamically to keep it clean
+    if (machine.isDemo) {
+      const containerName = `codeflow-demo-${machine.id}`;
+      console.log(`🐳 Destroying demo container: ${containerName}`);
+      exec(`docker rm -f ${containerName}`, (err, stdout, stderr) => {
+        if (err) {
+          console.error(`❌ Failed to destroy demo container ${containerName}:`, err, stderr);
+        } else {
+          console.log(`✅ Demo container ${containerName} destroyed successfully.`);
+        }
+      });
+    }
 
     if(!machine || !updatedSession){
       return res.status(500).json({ success: false, message: "Failed to release machine" });

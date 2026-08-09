@@ -109,6 +109,7 @@ export default function Dashboard() {
               storage={machine.storage}
               gpu={machine.gpu}
               owner={machine.owner}
+              isDemo={machine.isDemo}
             />
           ))}
         </div>

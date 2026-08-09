@@ -29,6 +29,7 @@ interface MachineInfo {
   name: string;
   cpu: number;
   interactive?: boolean;
+  isDemo?: boolean;
 }
 
 interface SessionInfo {
@@ -250,6 +251,29 @@ const TerminalPage = () => {
   
   // Inline node creation state
   const [creatingNode, setCreatingNode] = useState<CreatingNodeState | null>(null);
+
+  const [demoTimeRemaining, setDemoTimeRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!session || !session.machine.isDemo) return;
+
+    const calculateTime = () => {
+      const start = new Date(session.startTime).getTime();
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, 1200 - Math.floor(elapsed / 1000));
+      setDemoTimeRemaining(remaining);
+    };
+
+    calculateTime();
+    const interval = setInterval(calculateTime, 1000);
+    return () => clearInterval(interval);
+  }, [session]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<any>(null);
@@ -525,6 +549,12 @@ const TerminalPage = () => {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        
+        if (data.type === "DEMO_TIMEOUT") {
+          alert(data.message);
+          router.push("/dashboard");
+          return;
+        }
         
         if (data.type === "PTY_OUTPUT" && data.sessionId === sessionId) {
           if (xtermRef.current) {
@@ -815,6 +845,12 @@ const TerminalPage = () => {
                 <Clock className="w-3.5 h-3.5" />
                 Session: <span className="text-white">#{session.id}</span>
               </div>
+              {session.machine.isDemo && demoTimeRemaining !== null && (
+                <div className="flex items-center gap-2 text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-md font-mono animate-pulse select-none">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Demo Ends: {formatTime(demoTimeRemaining)}</span>
+                </div>
+              )}
               <button
                 onClick={handleReleaseMachine}
                 className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-md font-medium transition-colors"

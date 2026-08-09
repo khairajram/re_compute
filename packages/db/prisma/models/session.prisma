@@ -11,6 +11,7 @@ model Session {
 
   startTime DateTime @default(now())
   endTime   DateTime?
+  lastActiveAt DateTime @default(now())
 
   status    SessionStatus
 

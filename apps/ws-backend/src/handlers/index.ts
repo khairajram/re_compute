@@ -8,6 +8,8 @@ import { hostSockets } from "../state/hosts.js";
 import { userSockets } from "../state/user.js";
 import { prisma } from "@repo/db/client";
 
+const lastUpdateMap = new Map<string, number>();
+
 export function handleMessage(socket: WebSocket, message: any) {
   try {
     const parsedMessage = JSON.parse(message.toString());
@@ -58,7 +60,6 @@ export function handleMessage(socket: WebSocket, message: any) {
       }));
       return;
     }
-
     // Generic bidirectional router
     if (parsedMessage.machineId) {
       const isUser = userSockets.some((u) => u.socket === socket);
@@ -67,6 +68,19 @@ export function handleMessage(socket: WebSocket, message: any) {
         const host = hostSockets.find((h) => h.machineId === parsedMessage.machineId);
         if (host) {
           host.socket.send(message.toString());
+        }
+
+        // Track user activity for demo sessions
+        if (parsedMessage.sessionId) {
+          const now = Date.now();
+          const lastUpdate = lastUpdateMap.get(parsedMessage.sessionId) || 0;
+          if (now - lastUpdate > 10000) { // 10s throttle
+            lastUpdateMap.set(parsedMessage.sessionId, now);
+            prisma.session.update({
+              where: { id: parsedMessage.sessionId },
+              data: { lastActiveAt: new Date() }
+            }).catch((e) => console.error("Failed to update session lastActiveAt:", e));
+          }
         }
       } else {
         // Forward from host to all users matching the machineId

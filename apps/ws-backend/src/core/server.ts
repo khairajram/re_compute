@@ -2,6 +2,7 @@ import express from "express";
 import http from "http";
 import { WebSocketServer } from "ws";
 import { handleConnection } from "./connection.js";
+import { startDemoLifecycleManager } from "../services/demoLifecycle.js";
 
 export function startWebSocketServer() {
   const app = express();
@@ -12,6 +13,8 @@ export function startWebSocketServer() {
   const wss = new WebSocketServer({ server });
 
   wss.on("connection", handleConnection);
+
+  startDemoLifecycleManager();
 
   server.listen(port, () => {
     console.log(`Server running on port ${port}`);
